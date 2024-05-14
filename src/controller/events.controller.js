@@ -172,7 +172,7 @@ const uploadAndCreateImage = async (file, event_id, res) => {
 const editEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
-    const { _id } = req.tokenData;
+    const { _id } = req.tokenData._doc;
     const { name, description, date, time, address, city, phone, website } =
       req.body;
 
@@ -213,8 +213,8 @@ const getEvents = async (req, res) => {
 const deleteEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
-    const { _id } = req.tokenData;
 
+    const { _id } = req.tokenData._doc;
     // updatedBy
 
     const findInfo = { _id: id };
