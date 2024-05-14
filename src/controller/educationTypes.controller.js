@@ -110,7 +110,8 @@ const addEducationalEntities = async (req, res) => {
         res,
         200,
         true,
-        "Successfully added new educational entity."
+        "Successfully added new educational entity.",
+        newEntity
       );
     }
   }, res);
