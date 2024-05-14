@@ -10,9 +10,11 @@ const { fileUpload } = require("../helper/upload.helpers");
 
 const addEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id } = req.tokenData._doc;
-    const { name, date, time, address, city, phone } = req.body;
-    let thumbnail = req.files && req.files.thumbnail;
+    const { _id: userId } = req.tokenData._doc;
+    const { name, description, date, time, address, city, phone, website } =
+      req.body;
+    let event_thumbnail = req && req.files && req.files.thumbnail;
+    let event_images = req && req.files && req.files.images;
 
     if (!isNotEmpty(name)) {
       return sendResponse(
@@ -52,22 +54,24 @@ const addEvent = async (req, res) => {
     }
     const info = {
       name,
+      description,
       date,
       time,
       address,
       city,
       phone,
-      createdBy: _id,
+      website,
+      createdBy: userId,
     };
- 
-    
+
     const newEvent = await createEvent(info);
     if (!newEvent) {
       return sendResponse(res, 400, false, "Unable to add new event.");
     } else {
-      if (thumbnail) {
+      let thumbnail;
+      if (event_thumbnail) {
         const newFile = await fileUpload(
-          thumbnail,
+          event_thumbnail,
           `event-thumbnail/${newEvent._id}/`,
           ["jpg", "jpeg", "png", "gif", "webp", "avif"],
           true,
@@ -84,13 +88,38 @@ const addEvent = async (req, res) => {
 
       if (thumbnail) {
         let updatedEvent = await findAndUpdateEvent(
-          { _id: newEvent },
+          { _id: newEvent._id },
           {
             thumbnail: thumbnail,
           }
         );
         if (!updatedEvent) {
           return sendResponse(res, 400, false, "Unable to save thumbnail.");
+        }
+      }
+      if (event_images) {
+        let imgArray = [];
+        if (!event_images[0]) {
+          let fileName = await uploadAndCreateImage(
+            event_images,
+            newEvent._id,
+            res
+          );
+          imgArray.push(fileName);
+        } else {
+          for (let img of event_images) {
+            let fileName = await uploadAndCreateImage(img, newEvent._id, res);
+            imgArray.push(fileName);
+          }
+        }
+        let updatedEvent = await findAndUpdateEvent(
+          { _id: newEvent._id },
+          {
+            images: imgArray,
+          }
+        );
+        if (!updatedEvent) {
+          return sendResponse(res, 400, false, "Unable to save images.");
         }
       }
 
@@ -105,20 +134,58 @@ const addEvent = async (req, res) => {
   }, res);
 };
 
+const uploadAndCreateImage = async (file, event_id, res) => {
+  if (file) {
+    const newFile = await fileUpload(
+      file,
+      `event-image/${event_id}/`,
+      ["jpg", "jpeg", "png", "gif", "webp", "avif"],
+      false
+    );
+    // if success, return the name and push it in array, upload array in db
+
+    // return newFile.ok === true ? newFile.fileName : false;
+
+    if (newFile.ok === true) {
+      return newFile.fileName;
+    } else {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Unable to save images. Please try again"
+      );
+    }
+
+    // let img_name = newFile.fileName;
+    // await QueryCreateRoomImg({
+    //   event_id,
+    //   image_name: img_name,
+    //   priority: key + 1,
+    //   eat: currentDateTime,
+    //   eby,
+    // });
+    // }
+  }
+};
+
 const editEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
     const { _id } = req.tokenData;
-    const { name, date, time, address, city, phone } = req.body;
+    const { name, description, date, time, address, city, phone, website } =
+      req.body;
 
     const findInfo = { _id: id };
     const setInfo = {
       name,
+      description,
       date,
       time,
       address,
       city,
       phone,
+      website,
       updatedBy: _id,
     };
 

@@ -1,8 +1,14 @@
+/** @format */
+
 const mongoose = require("mongoose");
 
 const eventSchema = new mongoose.Schema(
   {
     name: {
+      type: String,
+      required: true,
+    },
+    description: {
       type: String,
       required: true,
     },
@@ -32,10 +38,24 @@ const eventSchema = new mongoose.Schema(
         reviewText: { type: String },
       },
     ],
+    website: {
+      type: String,
+      trim: true,
+      // match: [
+      //   /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/,
+      //   "Please enter a valid URL",
+      // ],
+    },
     thumbnail: {
       type: String, // URL to an image file
       required: false,
     },
+    images: [
+      {
+        type: String, // Assuming these are URLs to images
+        required: false,
+      },
+    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Assuming 'User' is your user model
@@ -53,10 +73,10 @@ const eventSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Enables createdAt and updatedAt fields automatically
+    collation: { locale: "en", strength: 2 },
   }
 );
 
 const Event = mongoose.model("Event", eventSchema);
 
 module.exports = Event;
-
