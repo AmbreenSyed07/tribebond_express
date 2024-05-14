@@ -24,6 +24,10 @@ const educationalEntitySchema = new Schema({
   },
   offers: String,
   additionalInfo: Schema.Types.Mixed, // This can hold any additional structured data unique to the type if necessary
+  status: {
+    type: Number,
+    default: 1, // Default status set to 1
+  },
 });
 
 const EducationalEntity = mongoose.model(
