@@ -18,6 +18,7 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     gender: { type: String, required: true },
     city: String,
+    state: String,
     religion: String,
     profilePicture: String, // This could be a URL to the image
     longitude: Number,
