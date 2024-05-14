@@ -24,6 +24,30 @@ const findAndUpdateEvent = async (findInfo, setInfo) => {
   });
 };
 
+const findEventById = async (id) => {
+  return asyncHandler(async () => {
+    const event = await Event.findById({ _id: id });
+    if (event) {
+      // Map through events and check for a thumbnail
+      // const modifiedEvent = event.map((event) => {
+      let eventObj = event.toObject();
+      if (eventObj.thumbnail) {
+        // Modify the thumbnail path
+        eventObj.thumbnail = `${base_url}public/data/event-thumbnail/${eventObj._id}/${eventObj.thumbnail}`;
+      }
+      if (eventObj.images && eventObj.images.length > 0) {
+        eventObj.images = eventObj.images.map((img) => {
+          return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
+        });
+      }
+      return eventObj; // Return the original event if no thumbnail
+      // });
+      // return modifiedEvent;
+    } else {
+      return false;
+    }
+  });
+};
 
 const findEventByCity = async (city) => {
   return asyncHandler(async () => {
@@ -56,4 +80,9 @@ const findEventByCity = async (city) => {
   });
 };
 
-module.exports = { createEvent, findAndUpdateEvent, findEventByCity };
+module.exports = {
+  createEvent,
+  findAndUpdateEvent,
+  findEventByCity,
+  findEventById,
+};

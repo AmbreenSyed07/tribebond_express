@@ -1,10 +1,14 @@
-const { asyncErrorHandler } = require("../helper/async-error.helper");
+const {
+  asyncErrorHandler,
+  asyncHandler,
+} = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
 const { isNotEmpty } = require("../helper/validate.helpers");
 const {
   createEvent,
   findAndUpdateEvent,
   findEventByCity,
+  findEventById,
 } = require("../service/event.service");
 const { fileUpload } = require("../helper/upload.helpers");
 
@@ -210,6 +214,17 @@ const getEvents = async (req, res) => {
   }, res);
 };
 
+const getEventById = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    let { id } = req.params;
+    const event = await findEventById(id);
+    if (!event) {
+      return sendResponse(res, 400, false, "No event found.");
+    }
+    return sendResponse(res, 200, true, "Successfully fetched event.", event);
+  }, res);
+};
+
 const deleteEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
@@ -229,4 +244,4 @@ const deleteEvent = async (req, res) => {
   }, res);
 };
 
-module.exports = { addEvent, editEvent, getEvents, deleteEvent };
+module.exports = { addEvent, editEvent, getEvents,getEventById, deleteEvent };
