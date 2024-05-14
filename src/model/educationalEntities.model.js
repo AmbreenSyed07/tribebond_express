@@ -28,6 +28,11 @@ const educationalEntitySchema = new Schema({
     type: Number,
     default: 1, // Default status set to 1
   },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // Assuming 'User' is your user model
+    required: false,
+  },
 });
 
 const EducationalEntity = mongoose.model(

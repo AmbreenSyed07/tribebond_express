@@ -45,14 +45,54 @@ const findAndUpdateEntity = async (findInfo, setInfo) => {
   });
 };
 
+// const getEduTypeAndEntities = async () => {
+//   return asyncHandler(async () => {
+//     let education = await EducationType.aggregate([
+//       {
+//         $lookup: {
+//           from: "educationalentities", // The collection to join
+//           localField: "_id", // Field from the input documents
+//           foreignField: "type", // Field from the documents of the "from" collection
+//           as: "entities", // Output array field with the joined documents
+//         },
+//       },
+//       {
+//         $project: {
+//           typeName: 1,
+//           description: 1,
+//           entities: {
+//             $filter: {
+//               input: "$entities",
+//               as: "entity",
+//               cond: { $eq: ["$$entity.type", "$_id"] },
+//             },
+//           },
+//         },
+//       },
+//     ]);
+//     return education ? education : false;
+//   });
+// };
+
 const getEduTypeAndEntities = async () => {
   return asyncHandler(async () => {
     let education = await EducationType.aggregate([
       {
         $lookup: {
           from: "educationalentities", // The collection to join
-          localField: "_id", // Field from the input documents
-          foreignField: "type", // Field from the documents of the "from" collection
+          let: { eduTypeId: "$_id" }, // Define variable to use in the pipeline
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$type", "$$eduTypeId"] }, // Ensures the type matches
+                    { $eq: ["$status", 1] }, // Additional condition for status = 1
+                  ],
+                },
+              },
+            },
+          ],
           as: "entities", // Output array field with the joined documents
         },
       },
@@ -60,19 +100,14 @@ const getEduTypeAndEntities = async () => {
         $project: {
           typeName: 1,
           description: 1,
-          entities: {
-            $filter: {
-              input: "$entities",
-              as: "entity",
-              cond: { $eq: ["$$entity.type", "$_id"] },
-            },
-          },
+          entities: 1, // Already filtered entities by the lookup pipeline
         },
       },
     ]);
+
     return education ? education : false;
   });
-};
+}
 
 module.exports = {
   createEducationType,

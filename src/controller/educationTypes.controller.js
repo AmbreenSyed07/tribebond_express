@@ -157,6 +157,31 @@ const editEduEntities = async (req, res) => {
   }, res);
 };
 
+const deleteEduEntities = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id } = req.tokenData._doc;
+
+    const findInfo = { _id: id };
+    const setInfo = {
+      status: 0,
+      updatedBy: _id,
+    };
+
+    const entity = await findAndUpdateEntity(findInfo, setInfo);
+    if (!entity) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Unable to delete educational entity."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted entity.");
+  }, res);
+};
+
 const getEducation = async (req, res) => {
   return asyncErrorHandler(async () => {
     const education = await getEduTypeAndEntities();
@@ -178,10 +203,11 @@ const getEducation = async (req, res) => {
     );
   }, res);
 };
- 
+
 module.exports = {
   addEducationTypes,
   addEducationalEntities,
   editEduEntities,
   getEducation,
+  deleteEduEntities,
 };
