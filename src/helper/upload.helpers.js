@@ -4,6 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const {guessExtensionFromType} = require("./mimeTypes.helpers");
+const { sendResponse } = require("./local.helpers");
 
 // generate random (unique) image name
 function getRandomFileName() {
@@ -136,7 +137,7 @@ const fileUpload = async (
 
     // Check if the upload directory exists, create it if not
     if (!fs.existsSync(uploadFilepath)) {
-      fs.mkdirSync(uploadFilepath, {recursive: true}, (err) => {
+      fs.mkdirSync(uploadFilepath, { recursive: true }, (err) => {
         throw new Error(err.message);
       });
     }
@@ -169,12 +170,39 @@ const fileUpload = async (
       filePath: `${uploadFilepath}${fileName}`,
     };
   } catch (err) {
-    return {ok: false, status: `failure`, message: err.message};
+    return { ok: false, status: `failure`, message: err.message };
   }
+};
+
+const extractImageIdentifier = (url) => {
+  const parts = url.split("/");
+  return parts[parts.length - 1]; // This gets the last part of the URL which is the unique identifier
+};
+
+const deleteImageFromStorage = async (imagePath, eventId, res) => {
+  const filePath = path.join(
+    __dirname,
+    "..",
+    "public",
+    "data",
+    "event-image",
+    `${eventId}`,
+    `${imagePath}`
+  );
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      throw new Error(`Unable to delete image: ${imageUrl}`);
+    } else {
+      return true;
+    }
+  });
 };
 
 /*****************************END*****************************/
 module.exports = {
   fileUpload,
   getRandomFileName,
+  extractImageIdentifier,
+  deleteImageFromStorage,
 };

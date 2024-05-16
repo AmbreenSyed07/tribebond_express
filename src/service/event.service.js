@@ -40,9 +40,7 @@ const findEventById = async (id) => {
           return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
         });
       }
-      return eventObj; // Return the original event if no thumbnail
-      // });
-      // return modifiedEvent;
+      return eventObj; 
     } else {
       return false;
     }

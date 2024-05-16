@@ -10,7 +10,12 @@ const {
   findEventByCity,
   findEventById,
 } = require("../service/event.service");
-const { fileUpload } = require("../helper/upload.helpers");
+const {
+  fileUpload,
+  extractImageIdentifier,
+  deleteImageFromStorage,
+} = require("../helper/upload.helpers");
+const Event = require("../model/events.model");
 
 const addEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
@@ -146,9 +151,6 @@ const uploadAndCreateImage = async (file, event_id, res) => {
       ["jpg", "jpeg", "png", "gif", "webp", "avif"],
       false
     );
-    // if success, return the name and push it in array, upload array in db
-
-    // return newFile.ok === true ? newFile.fileName : false;
 
     if (newFile.ok === true) {
       return newFile.fileName;
@@ -160,16 +162,6 @@ const uploadAndCreateImage = async (file, event_id, res) => {
         "Unable to save images. Please try again"
       );
     }
-
-    // let img_name = newFile.fileName;
-    // await QueryCreateRoomImg({
-    //   event_id,
-    //   image_name: img_name,
-    //   priority: key + 1,
-    //   eat: currentDateTime,
-    //   eby,
-    // });
-    // }
   }
 };
 
@@ -179,6 +171,11 @@ const editEvent = async (req, res) => {
     const { _id } = req.tokenData._doc;
     const { name, description, date, time, address, city, phone, website } =
       req.body;
+
+    if (req.files) {
+      const { images } = req.files;
+      await editImage(id, images, res);
+    }
 
     const findInfo = { _id: id };
     const setInfo = {
@@ -200,6 +197,28 @@ const editEvent = async (req, res) => {
 
     return sendResponse(res, 200, true, "Successfully updated event.", event);
   }, res);
+};
+
+const editImage = async (eventId, images, res) => {
+  const event = await Event.findById(eventId);
+  if (!event) {
+    return sendResponse(res, 400, false, "Event not found.");
+  }
+
+  // Assuming images is an array of files
+  const imagePaths = [];
+  if (!images[0]) {
+    let fileName = await uploadAndCreateImage(file, eventId, res);
+    imagePaths.push(fileName);
+  } else {
+    for (let file of images) {
+      let fileName = await uploadAndCreateImage(file, eventId, res);
+      imagePaths.push(fileName);
+    }
+  }
+
+  event.images = [...event.images, ...imagePaths];
+  await event.save();
 };
 
 const getEvents = async (req, res) => {
@@ -244,4 +263,36 @@ const deleteEvent = async (req, res) => {
   }, res);
 };
 
-module.exports = { addEvent, editEvent, getEvents,getEventById, deleteEvent };
+const deleteImages = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { eventId, imageUrls } = req.body;
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return sendResponse(res, 404, false, "Event not found");
+    }
+
+    const deleteImagePromises = imageUrls.map(async (imageUrl) => {
+      const imageIdentifier = extractImageIdentifier(imageUrl);
+      const deletedImage = await deleteImageFromStorage(
+        imageIdentifier,
+        eventId
+      );
+      event.images = event.images.filter((img) => img !== imageIdentifier);
+    });
+    await Promise.all(deleteImagePromises);
+    let updatedEvent = await findAndUpdateEvent({ _id: eventId }, event); //will update the existing event, as event is an instance of existing one
+    if (!updatedEvent) {
+      return sendResponse(res, 404, false, "Unable to save changes.");
+    }
+    return sendResponse(res, 200, true, "Deleted successfully.");
+  }, res);
+};
+
+module.exports = {
+  addEvent,
+  editEvent,
+  getEvents,
+  getEventById,
+  deleteEvent,
+  deleteImages,
+};
