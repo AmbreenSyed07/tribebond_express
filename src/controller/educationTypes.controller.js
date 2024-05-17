@@ -12,9 +12,11 @@ const {
   findAndUpdateEntity,
   getEduTypeAndEntities,
   getEduTypeAndEntitiesById,
+  findEducationByIdHelper,
 } = require("../service/educationType.service");
 const EducationalEntity = require("../model/educationalEntities.model");
 const { fileUpload } = require("../helper/upload.helpers");
+const { isNotEmpty } = require("../helper/validate.helpers");
 
 const addEducationTypes = async (req, res) => {
   return asyncErrorHandler(async () => {
@@ -349,6 +351,24 @@ const deleteEduImages = async (req, res) => {
   }, res);
 };
 
+const addReview = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { _id: userId } = req.tokenData._doc;
+    const { eduId, review } = req.body;
+    if (!isNotEmpty(review)) {
+      return sendResponse(res, 400, false, "Please write a review.");
+    }
+    const education = await findEducationByIdHelper(eduId);
+    if (!education) {
+      return sendResponse(res, 404, false, "Education not found");
+    }
+    const newReview = { user: userId, reviewText: review };
+    education.reviews.unshift(newReview);
+    await education.save();
+    return sendResponse(res, 200, true, "Successfully added your review.");
+  }, res);
+};
+
 module.exports = {
   addEducationTypes,
   addEducationalEntities,
@@ -357,4 +377,5 @@ module.exports = {
   deleteEduEntities,
   getEducationById,
   deleteEduImages,
+  addReview,
 };

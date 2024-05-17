@@ -137,11 +137,26 @@ const getEduTypeAndEntitiesById = async (id) => {
     let education = await EducationalEntity.findOne({
       _id: id,
       status: 1,
-    }).exec();
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .exec();
 
     if (education) {
       // let newEntities = education?.entities?.map((edu) => {
       let entityObj = education;
+
+      entityObj?.reviews &&
+        entityObj?.reviews.length > 0 &&
+        entityObj?.reviews.forEach((review) => {
+          if (
+            review.user &&
+            review.user.profilePicture &&
+            !review.user.profilePicture.startsWith(base_url)
+          ) {
+            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
+          }
+        });
+
       if (entityObj.thumbnail) {
         entityObj.thumbnail = `${base_url}public/data/edu-thumbnail/${entityObj._id}/${entityObj.thumbnail}`;
       }
@@ -162,6 +177,13 @@ const getEduTypeAndEntitiesById = async (id) => {
   });
 };
 
+const findEducationByIdHelper = async (id) => {
+  return asyncHandler(async () => {
+    const education = await EducationalEntity.findById(id);
+    return education ? education : false;
+  });
+};
+
 module.exports = {
   createEducationType,
   findEduType,
@@ -169,4 +191,5 @@ module.exports = {
   findAndUpdateEntity,
   getEduTypeAndEntities,
   getEduTypeAndEntitiesById,
+  findEducationByIdHelper,
 };

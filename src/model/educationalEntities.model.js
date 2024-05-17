@@ -34,6 +34,12 @@ const educationalEntitySchema = new Schema({
       required: false,
     },
   ],
+  reviews: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Optional: more fields can be added to the review object
+      reviewText: { type: String },
+    },
+  ],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User", // Assuming 'User' is your user model
