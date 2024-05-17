@@ -9,6 +9,7 @@ const {
   findAndUpdateEvent,
   findEventByCity,
   findEventById,
+  findEventByIdHelper,
 } = require("../service/event.service");
 const {
   fileUpload,
@@ -288,6 +289,24 @@ const deleteImages = async (req, res) => {
   }, res);
 };
 
+const addReview = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { _id: userId } = req.tokenData._doc;
+    const { eventId, review } = req.body;
+    if (!isNotEmpty(review)) {
+      return sendResponse(res, 400, false, "Please write a review.");
+    }
+    const event = await findEventByIdHelper(eventId);
+    if (!event) {
+      return sendResponse(res, 404, false, "Event not found");
+    }
+    const newReview = { user: userId, reviewText: review };
+    event.reviews.unshift(newReview);
+    await event.save();
+    return sendResponse(res, 200, true, "Successfully added your review.");
+  }, res);
+};
+
 module.exports = {
   addEvent,
   editEvent,
@@ -295,4 +314,5 @@ module.exports = {
   getEventById,
   deleteEvent,
   deleteImages,
+  addReview,
 };

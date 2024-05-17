@@ -5,6 +5,7 @@ const {
   deleteEvent,
   getEventById,
   deleteImages,
+  addReview,
 } = require("../controller/events.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -16,6 +17,7 @@ router.get("/display", verifyToken, getEvents);
 router.get("/display/:id", verifyToken, getEventById);
 router.patch("/delete/:id", verifyToken, deleteEvent);
 router.post("/delete-images", verifyToken, deleteImages);
+router.post("/add-review", verifyToken, addReview);
 
 module.exports = router;
 
