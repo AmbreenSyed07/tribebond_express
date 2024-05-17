@@ -9,10 +9,10 @@ const educationalEntitySchema = new Schema({
   email: {
     type: String,
     trim: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      "Please fill a valid email address",
-    ], // Regex for email validation
+    // match: [
+    //   /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+    //   "Please fill a valid email address",
+    // ], // Regex for email validation
   },
   website: {
     type: String,
@@ -23,15 +23,30 @@ const educationalEntitySchema = new Schema({
     // ],
   },
   offers: String,
-  additionalInfo: Schema.Types.Mixed, // This can hold any additional structured data unique to the type if necessary
-  status: {
-    type: Number,
-    default: 1, // Default status set to 1
+  additionalInfo: Schema.Types.Mixed,
+  thumbnail: {
+    type: String, // URL to an image file
+    required: false,
+  },
+  images: [
+    {
+      type: String, // Assuming these are URLs to images
+      required: false,
+    },
+  ],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // Assuming 'User' is your user model
+    required: true,
   },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User", // Assuming 'User' is your user model
     required: false,
+  },
+  status: {
+    type: Number,
+    default: 1, // Default status set to 1
   },
 });
 
@@ -41,4 +56,3 @@ const EducationalEntity = mongoose.model(
 );
 
 module.exports = EducationalEntity;
-

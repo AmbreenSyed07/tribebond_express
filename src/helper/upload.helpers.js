@@ -174,25 +174,48 @@ const fileUpload = async (
   }
 };
 
+const uploadAndCreateImage = async (file, folder, event_id, res) => {
+  if (file) {
+    const newFile = await fileUpload(
+      file,
+      `${folder}/${event_id}/`,
+      ["jpg", "jpeg", "png", "gif", "webp", "avif"],
+      false
+    );
+
+    if (newFile.ok === true) {
+      return newFile.fileName;
+    } else {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Unable to save images. Please try again"
+      );
+    }
+  }
+};
+
 const extractImageIdentifier = (url) => {
   const parts = url.split("/");
   return parts[parts.length - 1]; // This gets the last part of the URL which is the unique identifier
 };
 
-const deleteImageFromStorage = async (imagePath, eventId, res) => {
+const deleteImageFromStorage = async (imagePath, id, folder, res) => {
   const filePath = path.join(
     __dirname,
     "..",
     "public",
     "data",
-    "event-image",
-    `${eventId}`,
+    `${folder}`,
+    `${id}`,
     `${imagePath}`
   );
 
   fs.unlink(filePath, (err) => {
     if (err) {
-      throw new Error(`Unable to delete image: ${imageUrl}`);
+      console.log(err);
+      throw new Error(`Unable to delete image: ${imagePath}`);
     } else {
       return true;
     }
@@ -202,6 +225,7 @@ const deleteImageFromStorage = async (imagePath, eventId, res) => {
 /*****************************END*****************************/
 module.exports = {
   fileUpload,
+  uploadAndCreateImage,
   getRandomFileName,
   extractImageIdentifier,
   deleteImageFromStorage,

@@ -1,4 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
+const { base_url } = require("../helper/local.helpers");
 const EducationType = require("../model/educationTypes.model");
 const EducationalEntity = require("../model/educationalEntities.model");
 
@@ -30,7 +31,6 @@ const createEduEntity = async (info) => {
       : false;
   });
 };
-
 
 const findAndUpdateEntity = async (findInfo, setInfo) => {
   return asyncHandler(async () => {
@@ -105,9 +105,62 @@ const getEduTypeAndEntities = async () => {
       },
     ]);
 
-    return education ? education : false;
+    if (education.length > 0) {
+      // Map through education and check for a thumbnail
+      const modifiededucation = education.map((entity) => {
+        let newEntities = entity?.entities?.map((edu) => {
+          let entityObj = edu;
+          if (entityObj.thumbnail) {
+            // Modify the thumbnail path
+            entityObj.thumbnail = `${base_url}public/data/edu-thumbnail/${entityObj._id}/${entityObj.thumbnail}`;
+          }
+          if (entityObj.images && entityObj.images.length > 0) {
+            entityObj.images = entityObj.images.map((img) => {
+              return `${base_url}public/data/edu-images/${entityObj._id}/${img}`;
+            });
+          }
+          edu = entityObj;
+          return edu; // Return the original event if no thumbnail
+        });
+        entity.entities = newEntities;
+        return entity;
+      });
+      return modifiededucation;
+    } else {
+      return false;
+    }
   });
-}
+};
+
+const getEduTypeAndEntitiesById = async (id) => {
+  return asyncHandler(async () => {
+    let education = await EducationalEntity.findOne({
+      _id: id,
+      status: 1,
+    }).exec();
+
+    if (education) {
+      // let newEntities = education?.entities?.map((edu) => {
+      let entityObj = education;
+      if (entityObj.thumbnail) {
+        entityObj.thumbnail = `${base_url}public/data/edu-thumbnail/${entityObj._id}/${entityObj.thumbnail}`;
+      }
+      if (entityObj.images && entityObj.images.length > 0) {
+        entityObj.images = entityObj.images.map((img) => {
+          return `${base_url}public/data/edu-images/${entityObj._id}/${img}`;
+        });
+      }
+      // edu = entityObj;
+      return entityObj;
+      // });
+      // education.entities = newEntities;
+      // return education;
+    } else {
+      return false;
+    }
+    // return;
+  });
+};
 
 module.exports = {
   createEducationType,
@@ -115,4 +168,5 @@ module.exports = {
   createEduEntity,
   findAndUpdateEntity,
   getEduTypeAndEntities,
+  getEduTypeAndEntitiesById,
 };
