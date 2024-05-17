@@ -26,11 +26,26 @@ const findAndUpdateEvent = async (findInfo, setInfo) => {
 
 const findEventById = async (id) => {
   return asyncHandler(async () => {
-    const event = await Event.findById({ _id: id });
+    const event = await Event.findById({ _id: id }).populate(
+      "reviews.user",
+      "firstName lastName profilePicture"
+    );
     if (event) {
       // Map through events and check for a thumbnail
       // const modifiedEvent = event.map((event) => {
       let eventObj = event.toObject();
+      eventObj?.reviews &&
+        eventObj?.reviews.length > 0 &&
+        eventObj?.reviews.forEach((review) => {
+          if (
+            review.user &&
+            review.user.profilePicture &&
+            !review.user.profilePicture.startsWith(base_url)
+          ) {
+            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
+          }
+        });
+
       if (eventObj.thumbnail) {
         // Modify the thumbnail path
         eventObj.thumbnail = `${base_url}public/data/event-thumbnail/${eventObj._id}/${eventObj.thumbnail}`;
@@ -40,7 +55,7 @@ const findEventById = async (id) => {
           return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
         });
       }
-      return eventObj; 
+      return eventObj;
     } else {
       return false;
     }
