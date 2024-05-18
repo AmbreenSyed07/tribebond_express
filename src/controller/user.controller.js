@@ -99,8 +99,8 @@ const registerUser = async (req, res) => {
         city,
         state,
         religion,
-        longitude,
-        latitude,
+        // longitude,
+        // latitude,
       ].every(isNotEmpty)
     ) {
       return sendResponse(res, 400, false, "Invalid  data.");
