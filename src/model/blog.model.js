@@ -1,31 +1,35 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Create a schema for followers/following
-const userRelationshipSchema = new Schema(
+const blogSchema = new Schema(
   {
-    userId: { type: String },
+    statusText: { type: String, required: false },
+    backgroundImage: {
+      type: String, // URL to an image file
+      required: false,
+    },
+    blogImage: [
+      {
+        type: String, // Assuming these are URLs to images
+        required: false,
+      },
+    ],
+    status: {
+      type: Number,
+      default: 1, // Default status set to 1
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Assuming 'User' is your user model
+      required: true,
+    },
   },
-  { _id: false }
-); // _id set to false to prevent Mongoose from creating an automatic _id for subdocuments
+  {
+    timestamps: true, // Enables createdAt and updatedAt fields automatically
+    collation: { locale: "en", strength: 2 },
+  }
+);
 
-// Create the User schema
-const userSchema = new Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  gender: { type: String, required: true },
-  city: String,
-  religion: String,
-  profilePicture: String, // This could be a URL to the image
-  longitude: Number,
-  latitude: Number,
-  followers: [userRelationshipSchema],
-  following: [userRelationshipSchema],
-});
+const Blog = mongoose.model("Blog", blogSchema);
 
-// Create the model from the schema
-const User = mongoose.model("User", userSchema);
-
-module.exports = User;
+module.exports = Blog;

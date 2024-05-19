@@ -174,11 +174,11 @@ const fileUpload = async (
   }
 };
 
-const uploadAndCreateImage = async (file, folder, event_id, res) => {
+const uploadAndCreateImage = async (file, folder, id, res) => {
   if (file) {
     const newFile = await fileUpload(
       file,
-      `${folder}/${event_id}/`,
+      `${folder}/${id}/`,
       ["jpg", "jpeg", "png", "gif", "webp", "avif"],
       false
     );
