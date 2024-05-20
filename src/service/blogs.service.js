@@ -2,6 +2,7 @@ const { asyncHandler } = require("../helper/async-error.helper");
 const Blog = require("../model/blog.model");
 const Comment = require("../model/comment.model");
 const BlogCommentAssociation = require("../model/blogCommentAssociation.model");
+const { base_url } = require("../helper/local.helpers");
 
 const createBlog = async (info) => {
   return asyncHandler(async () => {
@@ -14,7 +15,35 @@ const createBlog = async (info) => {
 
 const findBlogs = async () => {
   return asyncHandler(async () => {
-    const blogs = await Blog.find({ status: true });
+    const blogs = await Blog.find({ status: true })
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+
+    for (let blog of blogs) {
+      if (
+        blog.createdBy &&
+        blog.createdBy.profilePicture &&
+        !blog.createdBy.profilePicture.startsWith(base_url)
+      ) {
+        blog.createdBy.profilePicture = `${base_url}public/data/profile/${blog.createdBy._id}/${blog.createdBy.profilePicture}`;
+      }
+
+      if (blog.backgroundImage && !blog.backgroundImage.startsWith(base_url)) {
+        blog.backgroundImage = `${base_url}public/data/blog/background-image/${blog._id}/${blog.backgroundImage}`;
+      }
+
+      if (blog.blogImage && blog.blogImage.length > 0) {
+        for (let i = 0; i < blog.blogImage.length; i++) {
+          let image = blog.blogImage[i];
+          if (!image.startsWith(base_url)) {
+            blog.blogImage[
+              i
+            ] = `${base_url}public/data/blog/blog-post-image/${blog._id}/${image}`;
+          }
+        }
+      }
+    }
+
     return blogs ? blogs : false;
   });
 };

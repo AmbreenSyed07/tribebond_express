@@ -109,10 +109,8 @@ const nestComments = async (commentsIn) => {
         status: true,
         isReply: true,
       });
-      console.log("replies:", replies);
       if (replies && replies.length > 0) {
         await comment.replies.push(replies);
-        console.log(comment);
       }
     }
   }
@@ -137,7 +135,6 @@ const nestComments = async (commentsIn) => {
   //   })
   // );
 
-  console.log("Final comments structure:", comments);
 
   return comments.filter((comment) => !comment.isReply);
 };
