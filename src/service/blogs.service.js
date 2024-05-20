@@ -117,7 +117,17 @@ const findAssociatedComments = async (latestCommentIds) => {
     let associatedComments = await Comment.find({
       _id: { $in: latestCommentIds },
       status: true,
-    }).populate("replyIds", "_id text userId isReply status");
+    })
+      .populate({
+        path: "replyIds",
+        select: "_id text userId isReply status",
+        populate: {
+          path: "userId",
+          select: "_id firstName lastName profilePicture",
+        },
+      })
+      .populate("userId", "_id firstName lastName profilePicture");
+    // .populate("replyIds", "_id text userId isReply status");
     return associatedComments ? associatedComments : false;
   });
 };
