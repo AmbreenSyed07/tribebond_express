@@ -129,6 +129,7 @@ const replyToComment = async (req, res) => {
       return sendResponse(res, 400, false, "Unable to reply to comment.");
     }
     const addReplyToParent = await findCommentByIdAndUpdate(
+      res,
       commentId,
       comment._id,
       res
@@ -176,9 +177,48 @@ const displayBlogs = async (req, res) => {
   }, res);
 };
 
+const displayAllComments = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { blogId } = req.body;
+    if (!blogId) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please select a blog to view comments."
+      );
+    }
+    const association = await findAssociation(blogId);
+
+    if (association) {
+      // Get the latest 2 comments (first 2 in the commentIds array)
+      const comments = await findAssociatedComments(association?.commentIds);
+      // what to do if comments is false????
+      if (comments) {
+        const nestedComments = await nestComments(comments);
+        return sendResponse(
+          res,
+          200,
+          true,
+          "Successfully fetched comments.",
+          nestedComments
+        );
+      }
+    } else {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "No comments have been posted on this blog."
+      );
+    }
+  }, res);
+};
+
 module.exports = {
   addBlog,
   addComment,
   replyToComment,
   displayBlogs,
+  displayAllComments,
 };

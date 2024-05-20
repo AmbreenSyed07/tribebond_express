@@ -2,7 +2,7 @@ const { asyncHandler } = require("../helper/async-error.helper");
 const Blog = require("../model/blog.model");
 const Comment = require("../model/comment.model");
 const BlogCommentAssociation = require("../model/blogCommentAssociation.model");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, sendResponse } = require("../helper/local.helpers");
 
 const createBlog = async (info) => {
   return asyncHandler(async () => {
@@ -91,7 +91,7 @@ const associateCommentAndBlog = async (blogId, commentId) => {
   });
 };
 
-const findCommentByIdAndUpdate = async (commentId, replyId) => {
+const findCommentByIdAndUpdate = async (res, commentId, replyId) => {
   return asyncHandler(async () => {
     const parentComment = await Comment.findById(commentId);
     if (!parentComment) {
