@@ -33,7 +33,6 @@ const addBlog = async (req, res) => {
     } else {
       let bgImage;
       if (backgroundImage) {
-        s;
         const newFile = await uploadAndCreateImage(
           backgroundImage,
           "blog/background-image",
