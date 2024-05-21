@@ -215,10 +215,30 @@ const displayAllComments = async (req, res) => {
   }, res);
 };
 
+const deleteBlog = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+
+    const { _id } = req.tokenData._doc;
+    // updatedBy
+
+    const findInfo = { _id: id };
+    const setInfo = { status: 0, updatedBy: _id };
+
+    const blog = await findAndUpdateBlog(findInfo, setInfo);
+    if (!blog) {
+      return sendResponse(res, 400, false, "Unable to delete blog.");
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted blog.");
+  }, res);
+};
+
 module.exports = {
   addBlog,
   addComment,
   replyToComment,
   displayBlogs,
   displayAllComments,
+  deleteBlog,
 };
