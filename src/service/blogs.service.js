@@ -61,6 +61,19 @@ const findAndUpdateBlog = async (findInfo, setInfo) => {
   });
 };
 
+const findAndUpdateComment = async (findInfo, setInfo) => {
+  return asyncHandler(async () => {
+    const comment = await Comment.findOneAndUpdate(
+      findInfo, // Match both ID and Type
+      {
+        $set: setInfo,
+      },
+      { new: true, runValidators: true } // Options to return the updated document and run schema validators
+    );
+    return comment ? comment : false;
+  });
+};
+
 const createComment = async (info) => {
   return asyncHandler(async () => {
     const comment = new Comment(info);
@@ -91,7 +104,7 @@ const associateCommentAndBlog = async (blogId, commentId) => {
   });
 };
 
-const findCommentByIdAndUpdate = async (res, commentId, replyId) => {
+const addReplyToComment = async (res, commentId, replyId) => {
   return asyncHandler(async () => {
     const parentComment = await Comment.findById(commentId);
     if (!parentComment) {
@@ -132,13 +145,22 @@ const findAssociatedComments = async (latestCommentIds) => {
   });
 };
 
+const findBlogById = async (id) => {
+  return asyncHandler(async () => {
+    const blog = await Blog.findById(id);
+    return blog ? blog : false;
+  });
+};
+
 module.exports = {
   createBlog,
   findAndUpdateBlog,
   createComment,
   associateCommentAndBlog,
-  findCommentByIdAndUpdate,
+  addReplyToComment,
   findBlogs,
   findAssociation,
   findAssociatedComments,
+  findAndUpdateComment,
+  findBlogById,
 };

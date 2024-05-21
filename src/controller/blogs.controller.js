@@ -5,10 +5,12 @@ const {
   findAndUpdateBlog,
   createComment,
   associateCommentAndBlog,
-  findCommentByIdAndUpdate,
+  addReplyToComment,
   findBlogs,
   findAssociation,
   findAssociatedComments,
+  findAndUpdateComment,
+  findBlogById,
 } = require("../service/blogs.service");
 const { fileUpload } = require("../helper/upload.helpers");
 const { nestComments } = require("../helper/blogs.helpers");
@@ -128,7 +130,7 @@ const replyToComment = async (req, res) => {
     if (!comment) {
       return sendResponse(res, 400, false, "Unable to reply to comment.");
     }
-    const addReplyToParent = await findCommentByIdAndUpdate(
+    const addReplyToParent = await addReplyToComment(
       res,
       commentId,
       comment._id,
@@ -218,11 +220,24 @@ const displayAllComments = async (req, res) => {
 const deleteBlog = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
-
     const { _id } = req.tokenData._doc;
-    // updatedBy
 
-    const findInfo = { _id: id };
+    const checkBlog = await findBlogById(id);
+    if (!checkBlog) {
+      return sendResponse(res, 404, false, "Blog not found.");
+    }
+
+    // Check if the blog's createdBy is equal to the user's id
+    if (checkBlog.createdBy.toString() !== _id.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not eligible to delete this post."
+      );
+    }
+
+    const findInfo = { _id: id, createdBy: _id };
     const setInfo = { status: 0, updatedBy: _id };
 
     const blog = await findAndUpdateBlog(findInfo, setInfo);
@@ -234,6 +249,23 @@ const deleteBlog = async (req, res) => {
   }, res);
 };
 
+const deleteComment = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id } = req.tokenData._doc;
+
+    const findInfo = { _id: id };
+    const setInfo = { status: false, updatedBy: _id };
+
+    const comment = await findAndUpdateComment(findInfo, setInfo);
+    if (!comment) {
+      return sendResponse(res, 400, false, "Unable to delete comment.");
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted comment.");
+  }, res);
+};
+
 module.exports = {
   addBlog,
   addComment,
@@ -241,4 +273,5 @@ module.exports = {
   displayBlogs,
   displayAllComments,
   deleteBlog,
+  deleteComment,
 };
