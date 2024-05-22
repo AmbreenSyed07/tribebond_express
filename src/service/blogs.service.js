@@ -152,6 +152,13 @@ const findBlogById = async (id) => {
   });
 };
 
+const findCommentById = async (id) => {
+  return asyncHandler(async () => {
+    const comment = await Comment.findById(id);
+    return comment ? comment : false;
+  });
+};
+
 module.exports = {
   createBlog,
   findAndUpdateBlog,
@@ -163,4 +170,5 @@ module.exports = {
   findAssociatedComments,
   findAndUpdateComment,
   findBlogById,
+  findCommentById,
 };

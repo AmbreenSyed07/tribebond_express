@@ -11,6 +11,7 @@ const {
   findAssociatedComments,
   findAndUpdateComment,
   findBlogById,
+  findCommentById,
 } = require("../service/blogs.service");
 const { fileUpload } = require("../helper/upload.helpers");
 const { nestComments } = require("../helper/blogs.helpers");
@@ -251,11 +252,33 @@ const deleteBlog = async (req, res) => {
 
 const deleteComment = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { id } = req.params;
-    const { _id } = req.tokenData._doc;
+    const { comment_id: commentId, blog_id: blogId } = req.params;
+    const { _id: userId } = req.tokenData._doc;
+    const existingBlog = await findBlogById(blogId);
+    if (!existingBlog) {
+      return sendResponse(res, 404, false, "Blog not found.");
+    }
 
-    const findInfo = { _id: id };
-    const setInfo = { status: false, updatedBy: _id };
+    // Find the comment by id
+    const existingComment = await findCommentById(commentId);
+    if (!existingComment) {
+      return sendResponse(res, 404, false, "Comment not found.");
+    }
+
+    if (
+      existingBlog.createdBy.toString() !== userId.toString() &&
+      existingComment.userId.toString() !== userId.toString()
+    ) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not eligible to delete this comment."
+      );
+    }
+
+    const findInfo = { _id: commentId };
+    const setInfo = { status: false, updatedBy: userId };
 
     const comment = await findAndUpdateComment(findInfo, setInfo);
     if (!comment) {

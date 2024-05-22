@@ -7,6 +7,7 @@ const {
   displayBlogs,
   displayAllComments,
   deleteBlog,
+  deleteComment,
 } = require("../controller/blogs.controller");
 
 router.post("/add", verifyToken, addBlog);
@@ -15,6 +16,6 @@ router.post("/comment-reply", verifyToken, replyToComment);
 router.get("/display", verifyToken, displayBlogs);
 router.post("/comments/display", verifyToken, displayAllComments);
 router.patch("/delete/:id", verifyToken, deleteBlog);
-
+router.patch("/delete/:blog_id/:comment_id", verifyToken, deleteComment);
 
 module.exports = router;
