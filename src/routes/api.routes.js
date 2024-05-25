@@ -4,12 +4,15 @@ const eduTypesRoutes = require("./enducationTypes.routes");
 const constantRoutes = require("../routes/constants.routes");
 const eventsRoutes = require("../routes/events.routes");
 const blogRoutes = require("../routes/blogs.routes");
+const restaurantRoutes = require("../routes/halalRestaurant.routes");
+
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
 router.use("/constants", constantRoutes);
 router.use("/events", eventsRoutes);
 router.use("/blogs", blogRoutes);
+router.use("/halal-restaurants", restaurantRoutes);
 
 module.exports = router;
 
