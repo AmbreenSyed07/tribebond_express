@@ -184,7 +184,7 @@ const editImage = async (restroId, images, res) => {
   const imagePaths = [];
   if (!images[0]) {
     let fileName = await uploadAndCreateImage(
-      file,
+      images,
       "restaurant/images",
       restroId,
       res

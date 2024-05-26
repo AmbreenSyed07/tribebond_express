@@ -1,6 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
 const { base_url } = require("../helper/local.helpers");
-const Event = require("../model/events.model");
 const HalalRestaurant = require("../model/halalRestaurant.model");
 
 const createRestaurant = async (info) => {
