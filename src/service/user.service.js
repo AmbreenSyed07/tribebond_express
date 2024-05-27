@@ -6,7 +6,7 @@ const OTP = require("../model/otp.model");
 const findUserByEmail = async (email) => {
   return asyncHandler(async () => {
     const user = await User.findOne({ email: email }).exec();
-    return user;
+    return user ? user.toJSON() : false;
   });
 };
 

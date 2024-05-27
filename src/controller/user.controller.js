@@ -26,7 +26,7 @@ const logInUser = async (req, res) => {
       return sendResponse(res, 400, false, "Invalid login data.");
     }
     const user = await findUserByEmail(email);
- 
+
     if (!user || !comparePassword(password, user.password)) {
       return sendResponse(res, 401, false, "Invalid credentials.");
     }
@@ -60,14 +60,10 @@ const logInUser = async (req, res) => {
     //   await sendEmail(to, subject, body);
     // }
 
-    return sendResponse(
-      res,
-      200,
-      true,
-      "Login successful.",
-      { token },
-      userWithoutPassword
-    );
+    return sendResponse(res, 200, true, "Login successful.", {
+      token,
+      user: userWithoutPassword,
+    });
   }, res);
 };
 
@@ -199,5 +195,17 @@ const registerUser = async (req, res) => {
     }
   }, res);
 };
+
+// const followUser = async (req, res) => {
+//   return asyncErrorHandler(async () => {
+//     const { _id: followerId } = req.tokenData._doc;
+//     const { _id: userId } = req.body;
+//     let followerAdded = await addFollower(followerId, userId);
+//     if (!followerAdded) {
+//       return sendResponse(res, 400, false, "Unable to follow.");
+//     }
+//     let followingAdded = await addFollowing(followerId, userId);
+//   }, res);
+// };
 
 module.exports = { registerUser, logInUser };
