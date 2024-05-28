@@ -20,7 +20,7 @@ const { sendResponse } = require("../helper/local.helpers");
 
 const addBlog = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { statusText } = req.body;
     let backgroundImage = req && req.files && req.files.backgroundImage;
     let blogImages = req && req.files && req.files.blogImages;
@@ -101,7 +101,7 @@ const addBlog = async (req, res) => {
 
 const addComment = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { blogId, text } = req.body;
 
     const comment = await createComment({ userId, text });
@@ -124,7 +124,7 @@ const addComment = async (req, res) => {
 
 const replyToComment = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { commentId, text } = req.body;
 
     const comment = await createComment({ userId, text, isReply: true });
@@ -221,7 +221,7 @@ const displayAllComments = async (req, res) => {
 const deleteBlog = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
-    const { _id } = req.tokenData._doc;
+    const { _id } = req.tokenData;
 
     const checkBlog = await findBlogById(id);
     if (!checkBlog) {
@@ -253,7 +253,7 @@ const deleteBlog = async (req, res) => {
 const deleteComment = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { comment_id: commentId, blog_id: blogId } = req.params;
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const existingBlog = await findBlogById(blogId);
     if (!existingBlog) {
       return sendResponse(res, 404, false, "Blog not found.");

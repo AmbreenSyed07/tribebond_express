@@ -198,7 +198,7 @@ const registerUser = async (req, res) => {
 
 // const followUser = async (req, res) => {
 //   return asyncErrorHandler(async () => {
-//     const { _id: followerId } = req.tokenData._doc;
+//     const { _id: followerId } = req.tokenData;
 //     const { _id: userId } = req.body;
 //     let followerAdded = await addFollower(followerId, userId);
 //     if (!followerAdded) {

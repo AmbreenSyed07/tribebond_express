@@ -20,7 +20,7 @@ const Event = require("../model/events.model");
 
 const addEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { name, description, date, time, address, city, phone, website } =
       req.body;
     let event_thumbnail = req && req.files && req.files.thumbnail;
@@ -169,7 +169,7 @@ const uploadAndCreateImage = async (file, event_id, res) => {
 const editEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
-    const { _id } = req.tokenData._doc;
+    const { _id } = req.tokenData;
     const { name, description, date, time, address, city, phone, website } =
       req.body;
 
@@ -224,7 +224,7 @@ const editImage = async (eventId, images, res) => {
 
 const getEvents = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { city } = req.tokenData._doc;
+    const { city } = req.tokenData;
     const events = await findEventByCity(city);
     if (!events) {
       return sendResponse(res, 400, false, "No events found.");
@@ -249,7 +249,7 @@ const deleteEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
 
-    const { _id } = req.tokenData._doc;
+    const { _id } = req.tokenData;
     // updatedBy
 
     const findInfo = { _id: id };
@@ -293,7 +293,7 @@ const deleteImages = async (req, res) => {
 
 const addReview = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { eventId, review } = req.body;
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");

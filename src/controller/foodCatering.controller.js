@@ -21,7 +21,7 @@ const {
 
 const addDiningLocation = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const {
       name,
       description,
@@ -112,7 +112,7 @@ const addDiningLocation = async (req, res) => {
 const editDiningLocation = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id: locationId } = req.params;
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const {
       name,
       description,
@@ -196,7 +196,7 @@ const editImage = async (locationId, images, res) => {
 
 const getDiningLocations = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { city } = req.tokenData._doc;
+    const { city } = req.tokenData;
     const diningLocations = await findDiningLocationsByCity(city);
     if (!diningLocations) {
       return sendResponse(res, 400, false, "No dining locations found.");
@@ -262,7 +262,7 @@ const deleteDiningLocationImages = async (req, res) => {
 
 const addDiningLocationReview = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { locationId, review } = req.body;
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");

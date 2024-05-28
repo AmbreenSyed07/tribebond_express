@@ -21,8 +21,8 @@ const {
 
 const addHouseholdItem = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const {_id: userId} = req.tokenData._doc;
-    const {name, description, address, city, phone, website} = req.body;
+    const { _id: userId } = req.tokenData;
+    const { name, description, address, city, phone, website } = req.body;
     let household_thumbnail = req && req.files && req.files.thumbnail;
     let household_images = req && req.files && req.files.images;
 
@@ -62,7 +62,7 @@ const addHouseholdItem = async (req, res) => {
 
       if (thumbnail) {
         let updatedHouseholdItem = await findAndUpdateHouseholdItem(
-          {_id: newHouseholdItem._id},
+          { _id: newHouseholdItem._id },
           {
             thumbnail: thumbnail,
           }
@@ -93,7 +93,7 @@ const addHouseholdItem = async (req, res) => {
           }
         }
         let updatedHouseholdItem = await findAndUpdateHouseholdItem(
-          {_id: newHouseholdItem._id},
+          { _id: newHouseholdItem._id },
           {
             images: imgArray,
           }
@@ -116,16 +116,16 @@ const addHouseholdItem = async (req, res) => {
 
 const editHouseholdItem = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const {id: householdId} = req.params;
-    const {_id: userId} = req.tokenData._doc;
-    const {name, description, address, city, phone, website} = req.body;
+    const { id: householdId } = req.params;
+    const { _id: userId } = req.tokenData;
+    const { name, description, address, city, phone, website } = req.body;
 
     if (req.files) {
-      const {images} = req.files;
+      const { images } = req.files;
       await editImage(householdId, images, res);
     }
 
-    const findInfo = {_id: householdId, status: true};
+    const findInfo = { _id: householdId, status: true };
     const setInfo = {
       name,
       description,
@@ -190,7 +190,7 @@ const editImage = async (householdId, images, res) => {
 
 const getHouseholdItems = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const {city} = req.tokenData._doc;
+    const { city } = req.tokenData;
     const householdItems = await findHouseholdItemsByCity(city);
     if (!householdItems) {
       return sendResponse(res, 400, false, "No household items found.");
@@ -208,7 +208,7 @@ const getHouseholdItems = async (req, res) => {
 
 const getHouseholdItemById = async (req, res) => {
   return asyncErrorHandler(async () => {
-    let {id} = req.params;
+    let { id } = req.params;
     const householdItem = await findHouseholdItemById(id);
     if (!householdItem) {
       return sendResponse(res, 400, false, "Household item not found.");
@@ -225,7 +225,7 @@ const getHouseholdItemById = async (req, res) => {
 
 const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const {householdId, imageUrls} = req.body;
+    const { householdId, imageUrls } = req.body;
     const householdItem = await findHouseholdItemByIdHelper(householdId);
     if (!householdItem) {
       return sendResponse(res, 404, false, "Household item not found");
@@ -244,7 +244,7 @@ const deleteImages = async (req, res) => {
     });
     await Promise.all(deleteImagePromises);
     let updatedHouseholdItem = await findAndUpdateHouseholdItem(
-      {_id: householdId},
+      { _id: householdId },
       householdItem
     );
     if (!updatedHouseholdItem) {
@@ -256,8 +256,8 @@ const deleteImages = async (req, res) => {
 
 const addReview = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const {_id: userId} = req.tokenData._doc;
-    const {householdId, review} = req.body;
+    const { _id: userId } = req.tokenData;
+    const { householdId, review } = req.body;
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -265,7 +265,7 @@ const addReview = async (req, res) => {
     if (!householdItem) {
       return sendResponse(res, 404, false, "Household item not found.");
     }
-    const newReview = {user: userId, reviewText: review};
+    const newReview = { user: userId, reviewText: review };
     householdItem.reviews.unshift(newReview);
     await householdItem.save();
     return sendResponse(res, 200, true, "Successfully added your review.");

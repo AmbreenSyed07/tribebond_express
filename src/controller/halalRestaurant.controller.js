@@ -24,7 +24,7 @@ const HalalRestaurant = require("../model/halalRestaurant.model");
 
 const addRestaurant = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
     let restaurant_thumbnail = req && req.files && req.files.thumbnail;
     let restaurant_images = req && req.files && req.files.images;
@@ -140,7 +140,7 @@ const addRestaurant = async (req, res) => {
 const editRestaurant = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id: restroId } = req.params;
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
 
     if (req.files) {
@@ -208,7 +208,7 @@ const editImage = async (restroId, images, res) => {
 
 const getRestaurants = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { city } = req.tokenData._doc;
+    const { city } = req.tokenData;
     const restaurants = await findRestaurantsByCity(city);
     if (!restaurants) {
       return sendResponse(res, 400, false, "No restaurants found.");
@@ -274,7 +274,7 @@ const deleteImages = async (req, res) => {
 
 const addReview = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { restaurantId, review } = req.body;
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");

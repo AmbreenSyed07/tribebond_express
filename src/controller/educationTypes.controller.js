@@ -57,7 +57,7 @@ const addEducationTypes = async (req, res) => {
 
 const addEducationalEntities = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id } = req.tokenData._doc;
+    const { _id } = req.tokenData;
     const {
       name,
       typeId,
@@ -262,7 +262,7 @@ const editImage = async (eduId, images, res) => {
 const deleteEduEntities = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
-    const { _id } = req.tokenData._doc;
+    const { _id } = req.tokenData;
 
     const findInfo = { _id: id };
     const setInfo = {
@@ -353,7 +353,7 @@ const deleteEduImages = async (req, res) => {
 
 const addReview = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { _id: userId } = req.tokenData._doc;
+    const { _id: userId } = req.tokenData;
     const { eduId, review } = req.body;
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
