@@ -9,6 +9,7 @@ const halalMeatRoutes = require("./halalMeat.routes");
 const groceryRoutes = require("./grocery.routes");
 const householdRoutes = require("./household.routes");
 const foodCateringRoutes = require("./foodCatering.routes");
+const rentalRoutes = require("./rental.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -20,5 +21,6 @@ router.use("/halal-meat", halalMeatRoutes);
 router.use("/groceries", groceryRoutes);
 router.use("/household-items", householdRoutes);
 router.use("/food-catering", foodCateringRoutes);
+router.use("/rental", rentalRoutes);
 
 module.exports = router;
