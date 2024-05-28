@@ -10,6 +10,7 @@ const groceryRoutes = require("./grocery.routes");
 const householdRoutes = require("./household.routes");
 const foodCateringRoutes = require("./foodCatering.routes");
 const rentalRoutes = require("./rental.routes");
+const sweetsRoutes = require("./sweets.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -22,5 +23,6 @@ router.use("/groceries", groceryRoutes);
 router.use("/household-items", householdRoutes);
 router.use("/food-catering", foodCateringRoutes);
 router.use("/rental", rentalRoutes);
+router.use("/sweets", sweetsRoutes);
 
 module.exports = router;
