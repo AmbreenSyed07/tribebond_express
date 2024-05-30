@@ -23,7 +23,6 @@ const addEvent = async (req, res) => {
     const { _id: userId } = req.tokenData;
     const { name, description, date, time, address, city, phone, website } =
       req.body;
-    let event_thumbnail = req && req.files && req.files.thumbnail;
     let event_images = req && req.files && req.files.images;
 
     if (!isNotEmpty(name)) {
@@ -78,35 +77,6 @@ const addEvent = async (req, res) => {
     if (!newEvent) {
       return sendResponse(res, 400, false, "Unable to add new event.");
     } else {
-      let thumbnail;
-      if (event_thumbnail) {
-        const newFile = await fileUpload(
-          event_thumbnail,
-          `event-thumbnail/${newEvent._id}/`,
-          ["jpg", "jpeg", "png", "gif", "webp", "avif"],
-          true,
-          undefined,
-          undefined,
-          0,
-          10
-        );
-        if (newFile.ok === false) {
-          return sendResponse(res, 400, false, newFile.message);
-        }
-        thumbnail = newFile.fileName;
-      }
-
-      if (thumbnail) {
-        let updatedEvent = await findAndUpdateEvent(
-          { _id: newEvent._id },
-          {
-            thumbnail: thumbnail,
-          }
-        );
-        if (!updatedEvent) {
-          return sendResponse(res, 400, false, "Unable to save thumbnail.");
-        }
-      }
       if (event_images) {
         let imgArray = [];
         if (!event_images[0]) {

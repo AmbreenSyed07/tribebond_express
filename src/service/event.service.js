@@ -31,8 +31,6 @@ const findEventById = async (id) => {
       "firstName lastName profilePicture"
     );
     if (event) {
-      // Map through events and check for a thumbnail
-      // const modifiedEvent = event.map((event) => {
       let eventObj = event.toObject();
       eventObj?.reviews &&
         eventObj?.reviews.length > 0 &&
@@ -46,10 +44,6 @@ const findEventById = async (id) => {
           }
         });
 
-      if (eventObj.thumbnail) {
-        // Modify the thumbnail path
-        eventObj.thumbnail = `${base_url}public/data/event-thumbnail/${eventObj._id}/${eventObj.thumbnail}`;
-      }
       if (eventObj.images && eventObj.images.length > 0) {
         eventObj.images = eventObj.images.map((img) => {
           return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
@@ -73,7 +67,6 @@ const findEventByCity = async (city) => {
       .exec();
     // return events.length > 0 ? events : false;
     if (events.length > 0) {
-      // Map through events and check for a thumbnail
       const modifiedEvents = events.map((event) => {
         let eventObj = event.toObject();
 
@@ -89,16 +82,12 @@ const findEventByCity = async (city) => {
             }
           });
 
-        if (eventObj.thumbnail) {
-          // Modify the thumbnail path
-          eventObj.thumbnail = `${base_url}public/data/event-thumbnail/${eventObj._id}/${eventObj.thumbnail}`;
-        }
         if (eventObj.images && eventObj.images.length > 0) {
           eventObj.images = eventObj.images.map((img) => {
             return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
           });
         }
-        return eventObj; // Return the original event if no thumbnail
+        return eventObj;
       });
       return modifiedEvents;
     } else {
