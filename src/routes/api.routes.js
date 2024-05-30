@@ -19,6 +19,7 @@ const doctorRoutes = require("./doctor.routes");
 const healthRoutes = require("./health.routes");
 const qurbaniRoutes = require("./qurbani.routes");
 const beautyRoutes = require("./beauty.routes");
+const realEstateRoutes = require("./realEstate.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -40,5 +41,7 @@ router.use("/doctor", doctorRoutes);
 router.use("/health", healthRoutes);
 router.use("/qurbani", qurbaniRoutes);
 router.use("/beauty", beautyRoutes);
+router.use("/real-estate", realEstateRoutes);
+
 
 module.exports = router;
