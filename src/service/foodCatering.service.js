@@ -30,12 +30,21 @@ const findAndUpdateDiningLocation = async (findInfo, setInfo) => {
 
 const findDiningLocationById = async (id) => {
   return asyncHandler(async () => {
-    const diningLocation = await FoodCatering.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
+    const diningLocation = await FoodCatering.findById({ _id: id })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
     if (diningLocation) {
       let diningLocationObj = diningLocation.toObject();
+
+      if (
+        diningLocationObj.createdBy &&
+        diningLocationObj.createdBy.profilePicture &&
+        !diningLocationObj.createdBy.profilePicture.startsWith(base_url)
+      ) {
+        diningLocationObj.createdBy.profilePicture = `${base_url}public/data/profile/${diningLocationObj.createdBy._id}/${diningLocationObj.createdBy.profilePicture}`;
+      }
+
       diningLocationObj?.reviews &&
         diningLocationObj?.reviews.length > 0 &&
         diningLocationObj?.reviews.forEach((review) => {
@@ -68,10 +77,19 @@ const findDiningLocationsByCity = async (city) => {
     })
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (diningLocations.length > 0) {
       const modifiedDiningLocations = diningLocations.map((diningLocation) => {
         let diningLocationObj = diningLocation.toObject();
+
+        if (
+          diningLocationObj.createdBy &&
+          diningLocationObj.createdBy.profilePicture &&
+          !diningLocationObj.createdBy.profilePicture.startsWith(base_url)
+        ) {
+          diningLocationObj.createdBy.profilePicture = `${base_url}public/data/profile/${diningLocationObj.createdBy._id}/${diningLocationObj.createdBy.profilePicture}`;
+        }
 
         diningLocationObj?.reviews &&
           diningLocationObj?.reviews.length > 0 &&
