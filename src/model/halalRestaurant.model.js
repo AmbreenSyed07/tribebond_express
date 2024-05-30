@@ -26,7 +26,7 @@ const halalRestaurantSchema = new mongoose.Schema(
     },
     reviews: [
       {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         reviewText: { type: String },
       },
     ],
@@ -37,10 +37,6 @@ const halalRestaurantSchema = new mongoose.Schema(
       //   /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/,
       //   "Please enter a valid URL",
       // ],
-    },
-    thumbnail: {
-      type: String, // URL to an image file
-      required: false,
     },
     images: [
       {

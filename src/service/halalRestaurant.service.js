@@ -46,13 +46,9 @@ const findRestaurantById = async (id) => {
           }
         });
 
-      if (restaurantObj.thumbnail) {
-        // Modify the thumbnail path
-        restaurantObj.thumbnail = `${base_url}public/data/restaurant/thumbnail/${restaurantObj._id}/${restaurantObj.thumbnail}`;
-      }
       if (restaurantObj.images && restaurantObj.images.length > 0) {
         restaurantObj.images = restaurantObj.images.map((img) => {
-          return `${base_url}public/data/restaurant/images/${restaurantObj._id}/${img}`;
+          return `${base_url}public/data/restaurant/${restaurantObj._id}/${img}`;
         });
       }
       return restaurantObj;
@@ -73,7 +69,6 @@ const findRestaurantsByCity = async (city) => {
       .exec();
     // return restaurants.length > 0 ? restaurants : false;
     if (restaurants.length > 0) {
-      // Map through restaurants and check for a thumbnail
       const modifiedRestaurants = restaurants.map((restaurant) => {
         let restaurantObj = restaurant.toObject();
 
@@ -89,16 +84,12 @@ const findRestaurantsByCity = async (city) => {
             }
           });
 
-        if (restaurantObj.thumbnail) {
-          // Modify the thumbnail path
-          restaurantObj.thumbnail = `${base_url}public/data/restaurant/thumbnail/${restaurantObj._id}/${restaurantObj.thumbnail}`;
-        }
         if (restaurantObj.images && restaurantObj.images.length > 0) {
           restaurantObj.images = restaurantObj.images.map((img) => {
-            return `${base_url}public/data/restaurant/images/${restaurantObj._id}/${img}`;
+            return `${base_url}public/data/restaurant/${restaurantObj._id}/${img}`;
           });
         }
-        return restaurantObj; // Return the original restaurant if no thumbnail
+        return restaurantObj;
       });
       return modifiedRestaurants;
     } else {

@@ -7,9 +7,6 @@ const { isNotEmpty } = require("../helper/validate.helpers");
 const {
   createRestaurant,
   findAndUpdateRestaurant,
-  findEventByCity,
-  findEventById,
-  findEventByIdHelper,
   findRestaurantByIdHelper,
   findRestaurantById,
   findRestaurantsByCity,
@@ -26,7 +23,6 @@ const addRestaurant = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
-    let restaurant_thumbnail = req && req.files && req.files.thumbnail;
     let restaurant_images = req && req.files && req.files.images;
 
     if (!isNotEmpty(name)) {
@@ -72,34 +68,12 @@ const addRestaurant = async (req, res) => {
     if (!newRestaurant) {
       return sendResponse(res, 400, false, "Unable to add new restaurant.");
     } else {
-      let thumbnail;
-      if (restaurant_thumbnail) {
-        const newFile = await uploadAndCreateImage(
-          restaurant_thumbnail,
-          "restaurant/thumbnail",
-          newRestaurant._id,
-          res
-        );
-        thumbnail = newFile;
-      }
-
-      if (thumbnail) {
-        let updatedRestaurant = await findAndUpdateRestaurant(
-          { _id: newRestaurant._id },
-          {
-            thumbnail: thumbnail,
-          }
-        );
-        if (!updatedRestaurant) {
-          return sendResponse(res, 400, false, "Unable to save thumbnail.");
-        }
-      }
       if (restaurant_images) {
         let imgArray = [];
         if (!restaurant_images[0]) {
           let fileName = await uploadAndCreateImage(
             restaurant_images,
-            "restaurant/images",
+            "restaurant",
             newRestaurant._id,
             res
           );
@@ -108,7 +82,7 @@ const addRestaurant = async (req, res) => {
           for (let img of restaurant_images) {
             let fileName = await uploadAndCreateImage(
               img,
-              "restaurant/images",
+              "restaurant",
               newRestaurant._id,
               res
             );
@@ -142,6 +116,21 @@ const editRestaurant = async (req, res) => {
     const { id: restroId } = req.params;
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
+
+    const checkRestaurant = await findRestaurantByIdHelper(restroId);
+    if (!checkRestaurant) {
+      return sendResponse(res, 404, false, "Restaurant not found");
+    }
+
+    // Check if the Beauty record's createdBy is equal to the user's id
+    if (checkRestaurant.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this restaurant record."
+      );
+    }
 
     if (req.files) {
       const { images } = req.files;
@@ -185,7 +174,7 @@ const editImage = async (restroId, images, res) => {
   if (!images[0]) {
     let fileName = await uploadAndCreateImage(
       images,
-      "restaurant/images",
+      "restaurant",
       restroId,
       res
     );
@@ -194,7 +183,7 @@ const editImage = async (restroId, images, res) => {
     for (let file of images) {
       let fileName = await uploadAndCreateImage(
         file,
-        "restaurant/images",
+        "restaurant",
         restroId,
         res
       );
@@ -244,9 +233,20 @@ const getRestaurantById = async (req, res) => {
 const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { restaurantId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
     const restaurant = await findRestaurantByIdHelper(restaurantId);
     if (!restaurant) {
       return sendResponse(res, 404, false, "Restaurant not found");
+    }
+
+    // Check if the Beauty record's createdBy is equal to the user's id
+    if (restaurant.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this restaurant record."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -254,7 +254,7 @@ const deleteImages = async (req, res) => {
       const deletedImage = await deleteImageFromStorage(
         imageIdentifier,
         restaurantId,
-        "restaurant/images"
+        "restaurant"
       );
       restaurant.images = restaurant.images.filter(
         (img) => img !== imageIdentifier
