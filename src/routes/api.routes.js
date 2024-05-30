@@ -20,6 +20,7 @@ const healthRoutes = require("./health.routes");
 const qurbaniRoutes = require("./qurbani.routes");
 const beautyRoutes = require("./beauty.routes");
 const realEstateRoutes = require("./realEstate.routes");
+const banquetRoutes = require("./banquet.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -42,6 +43,7 @@ router.use("/health", healthRoutes);
 router.use("/qurbani", qurbaniRoutes);
 router.use("/beauty", beautyRoutes);
 router.use("/real-estate", realEstateRoutes);
+router.use("/banquet", banquetRoutes);
 
 
 module.exports = router;
