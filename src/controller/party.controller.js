@@ -95,7 +95,6 @@ const editParty = async (req, res) => {
     if (!checkParty) {
       return sendResponse(res, 404, false, "Party not found.");
     }
-    console.log(checkParty.createdBy, userId);
     // Check if the party's createdBy is equal to the user's id
     if (checkParty.createdBy.toString() !== userId.toString()) {
       return sendResponse(
