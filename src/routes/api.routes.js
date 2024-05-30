@@ -16,6 +16,7 @@ const partyRoutes = require("./party.routes");
 const legalRoutes = require("./legal.routes");
 const automobileRoutes = require("./automobile.routes");
 const doctorRoutes = require("./doctor.routes");
+const healthRoutes = require("./health.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -34,5 +35,6 @@ router.use("/party", partyRoutes);
 router.use("/legal", legalRoutes);
 router.use("/automobile", automobileRoutes);
 router.use("/doctor", doctorRoutes);
+router.use("/health", healthRoutes);
 
 module.exports = router;
