@@ -21,6 +21,7 @@ const qurbaniRoutes = require("./qurbani.routes");
 const beautyRoutes = require("./beauty.routes");
 const realEstateRoutes = require("./realEstate.routes");
 const banquetRoutes = require("./banquet.routes");
+const hennaRoutes = require("./henna.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -44,6 +45,7 @@ router.use("/qurbani", qurbaniRoutes);
 router.use("/beauty", beautyRoutes);
 router.use("/real-estate", realEstateRoutes);
 router.use("/banquet", banquetRoutes);
+router.use("/henna", hennaRoutes);
 
 
 module.exports = router;
