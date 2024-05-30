@@ -12,6 +12,10 @@ const foodCateringRoutes = require("./foodCatering.routes");
 const rentalRoutes = require("./rental.routes");
 const sweetsRoutes = require("./sweets.routes");
 const electronicsRoutes = require("./electronics.routes");
+const partyRoutes = require("./party.routes");
+// const legalRoutes = require("./legal.routes");
+// const automobileRoutes = require("./automobile.routes");
+// const doctorRoutes = require("./doctor.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -26,5 +30,9 @@ router.use("/food-catering", foodCateringRoutes);
 router.use("/rental", rentalRoutes);
 router.use("/sweets", sweetsRoutes);
 router.use("/electronics", electronicsRoutes);
+router.use("/party", partyRoutes);
+// router.use("/legal", legalRoutes);
+// router.use("/automobile", automobileRoutes);
+// router.use("/doctor", doctorRoutes);
 
 module.exports = router;
