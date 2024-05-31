@@ -91,7 +91,6 @@ const addRental = async (req, res) => {
 const editRental = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id: rentalId } = req.params;
-    console.log(rentalId);
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
 
@@ -128,7 +127,6 @@ const editRental = async (req, res) => {
 
 const editImage = async (rentalId, images, res) => {
   const rental = await findRentalByIdHelper(rentalId);
-  console.log("edit image rental", rental);
   if (!rental) {
     return sendResponse(res, 400, false, "Rental not found.");
   }

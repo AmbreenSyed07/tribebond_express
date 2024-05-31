@@ -237,7 +237,6 @@ const deleteEvent = async (req, res) => {
 const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { eventId, imageUrls } = req.body;
-    console.log(eventId, imageUrls);
     const event = await Event.findById(eventId);
     if (!event) {
       return sendResponse(res, 404, false, "Event not found");

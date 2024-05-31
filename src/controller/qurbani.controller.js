@@ -141,7 +141,6 @@ const editQurbani = async (req, res) => {
 
 const editImage = async (qurbaniId, images, res) => {
   const qurbani = await findQurbaniByIdHelper(qurbaniId);
-  console.log("edit image qurbani", qurbani);
   if (!qurbani) {
     return sendResponse(res, 400, false, "Qurbani not found.");
   }

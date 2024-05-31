@@ -26,17 +26,13 @@ const householdSchema = new mongoose.Schema(
     },
     reviews: [
       {
-        user: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
-        reviewText: {type: String},
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        reviewText: { type: String },
       },
     ],
     website: {
       type: String,
       trim: true,
-    },
-    thumbnail: {
-      type: String,
-      required: false,
     },
     images: [
       {
@@ -61,7 +57,7 @@ const householdSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    collation: {locale: "en", strength: 2},
+    collation: { locale: "en", strength: 2 },
   }
 );
 

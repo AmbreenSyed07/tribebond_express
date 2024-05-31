@@ -211,6 +211,7 @@ const getGroceryById = async (req, res) => {
 const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { groceryId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
     const grocery = await findGroceryByIdHelper(groceryId);
     if (!grocery) {
       return sendResponse(res, 404, false, "Grocery not found");

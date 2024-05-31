@@ -48,17 +48,10 @@ const findHouseholdItemById = async (id) => {
           }
         });
 
-      if (householdItemObj.thumbnail) {
-        // Modify the thumbnail path
-        householdItemObj.thumbnail = `${base_url}public/data/household/thumbnail/${householdItemObj._id}/${householdItemObj.thumbnail}`;
-      }
       if (householdItemObj.images && householdItemObj.images.length > 0) {
         householdItemObj.images = householdItemObj.images.map((img) => {
           return `${base_url}public/data/household/images/${householdItemObj._id}/${img}`;
         });
-        if (householdItemObj.thumbnail) {
-          householdItemObj.images.unshift(householdItemObj.thumbnail);
-        }
       }
       return householdItemObj;
     } else {
@@ -92,15 +85,12 @@ const findHouseholdItemsByCity = async (city) => {
             }
           });
 
-        if (householdItemObj.thumbnail) {
-          householdItemObj.thumbnail = `${base_url}public/data/household/thumbnail/${householdItemObj._id}/${householdItemObj.thumbnail}`;
-        }
         if (householdItemObj.images && householdItemObj.images.length > 0) {
           householdItemObj.images = householdItemObj.images.map((img) => {
             return `${base_url}public/data/household/images/${householdItemObj._id}/${img}`;
           });
         }
-        return householdItemObj; // Return the original householdItem if no thumbnail
+        return householdItemObj;
       });
       return modifiedHouseholdItems;
     } else {

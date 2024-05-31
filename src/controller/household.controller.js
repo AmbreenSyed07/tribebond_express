@@ -23,7 +23,6 @@ const addHouseholdItem = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
-    let household_thumbnail = req && req.files && req.files.thumbnail;
     let household_images = req && req.files && req.files.images;
 
     if (!isNotEmpty(name)) {
@@ -49,28 +48,6 @@ const addHouseholdItem = async (req, res) => {
     if (!newHouseholdItem) {
       return sendResponse(res, 400, false, "Unable to add new household item.");
     } else {
-      let thumbnail;
-      if (household_thumbnail) {
-        const newFile = await uploadAndCreateImage(
-          household_thumbnail,
-          "household/thumbnail",
-          newHouseholdItem._id,
-          res
-        );
-        thumbnail = newFile;
-      }
-
-      if (thumbnail) {
-        let updatedHouseholdItem = await findAndUpdateHouseholdItem(
-          { _id: newHouseholdItem._id },
-          {
-            thumbnail: thumbnail,
-          }
-        );
-        if (!updatedHouseholdItem) {
-          return sendResponse(res, 400, false, "Unable to save thumbnail.");
-        }
-      }
       if (household_images) {
         let imgArray = [];
         if (!household_images[0]) {
@@ -119,6 +96,20 @@ const editHouseholdItem = async (req, res) => {
     const { id: householdId } = req.params;
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
+
+    const checkHousehold = await findHouseholdItemByIdHelper(householdId);
+    if (!checkHousehold) {
+      return sendResponse(res, 404, false, "Household item not found");
+    }
+
+    if (checkHousehold.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this Household item."
+      );
+    }
 
     if (req.files) {
       const { images } = req.files;
@@ -226,9 +217,18 @@ const getHouseholdItemById = async (req, res) => {
 const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { householdId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
     const householdItem = await findHouseholdItemByIdHelper(householdId);
     if (!householdItem) {
       return sendResponse(res, 404, false, "Household item not found");
+    }
+    if (householdItem.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this Household item."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
