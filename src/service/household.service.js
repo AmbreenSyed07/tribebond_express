@@ -106,10 +106,23 @@ const findHouseholdItemByIdHelper = async (id) => {
   });
 };
 
+const searchHouseholds = async (query) => {
+  return asyncHandler(async () => {
+    const households = await Household.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return households.length > 0 ? households : false;
+  });
+};
+
 module.exports = {
   createHouseholdItem,
   findAndUpdateHouseholdItem,
   findHouseholdItemsByCity,
   findHouseholdItemById,
   findHouseholdItemByIdHelper,
+  searchHouseholds,
 };

@@ -7,8 +7,9 @@ const {
   getHouseholdItemById,
   deleteImages,
   addReview,
+  searchHousehold,
 } = require("../controller/household.controller");
-const {verifyToken} = require("../middlewares/auth.middlewares");
+const { verifyToken } = require("../middlewares/auth.middlewares");
 
 const router = require("express").Router();
 
@@ -18,5 +19,6 @@ router.get("/display", verifyToken, getHouseholdItems);
 router.get("/display/:id", verifyToken, getHouseholdItemById);
 router.post("/delete-images", verifyToken, deleteImages);
 router.post("/add-review", verifyToken, addReview);
+router.post("/search", verifyToken, searchHousehold);
 
 module.exports = router;

@@ -1,17 +1,15 @@
 /** @format */
 
-const {
-  asyncErrorHandler,
-  asyncHandler,
-} = require("../helper/async-error.helper");
-const {sendResponse} = require("../helper/local.helpers");
-const {isNotEmpty} = require("../helper/validate.helpers");
+const { asyncErrorHandler } = require("../helper/async-error.helper");
+const { sendResponse } = require("../helper/local.helpers");
+const { isNotEmpty } = require("../helper/validate.helpers");
 const {
   createHouseholdItem,
   findAndUpdateHouseholdItem,
   findHouseholdItemByIdHelper,
   findHouseholdItemById,
   findHouseholdItemsByCity,
+  searchHouseholds,
 } = require("../service/household.service");
 const {
   extractImageIdentifier,
@@ -272,6 +270,29 @@ const addReview = async (req, res) => {
   }, res);
 };
 
+const searchHousehold = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const households = await searchHouseholds(query);
+    if (!households || households.length === 0) {
+      return sendResponse(res, 404, false, "No households found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched households.",
+      households
+    );
+  }, res);
+};
+
 module.exports = {
   addHouseholdItem,
   editHouseholdItem,
@@ -279,4 +300,5 @@ module.exports = {
   getHouseholdItemById,
   deleteImages,
   addReview,
+  searchHousehold,
 };

@@ -7,6 +7,7 @@ const {
   getDiningLocationById,
   deleteDiningLocationImages,
   addDiningLocationReview,
+  searchFoodCatering,
 } = require("../controller/foodCatering.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -18,5 +19,6 @@ router.get("/display", verifyToken, getDiningLocations);
 router.get("/display/:id", verifyToken, getDiningLocationById);
 router.post("/delete-images", verifyToken, deleteDiningLocationImages);
 router.post("/add-review", verifyToken, addDiningLocationReview);
+router.post("/search", verifyToken, searchFoodCatering);
 
 module.exports = router;

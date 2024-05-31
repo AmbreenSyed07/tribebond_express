@@ -5,6 +5,7 @@ const {
   getGroceryById,
   deleteImages,
   addReview,
+  searchGrocery,
 } = require("../controller/grocery.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -16,5 +17,6 @@ router.get("/display", verifyToken, getGroceries);
 router.get("/display/:id", verifyToken, getGroceryById);
 router.post("/delete-images", verifyToken, deleteImages);
 router.post("/add-review", verifyToken, addReview);
+router.post("/search", verifyToken, searchGrocery);
 
 module.exports = router;

@@ -12,6 +12,7 @@ const {
   findDiningLocationByIdHelper,
   findDiningLocationById,
   findDiningLocationsByCity,
+  searchFoodCaterings,
 } = require("../service/foodCatering.service");
 const {
   extractImageIdentifier,
@@ -278,6 +279,29 @@ const addDiningLocationReview = async (req, res) => {
   }, res);
 };
 
+const searchFoodCatering = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const foodCaterings = await searchFoodCaterings(query);
+    if (!foodCaterings || foodCaterings.length === 0) {
+      return sendResponse(res, 404, false, "No food caterings found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched food caterings.",
+      foodCaterings
+    );
+  }, res);
+};
+
 module.exports = {
   addDiningLocation,
   editDiningLocation,
@@ -285,4 +309,5 @@ module.exports = {
   getDiningLocationById,
   deleteDiningLocationImages,
   addDiningLocationReview,
+  searchFoodCatering,
 };

@@ -124,10 +124,23 @@ const findDiningLocationByIdHelper = async (id) => {
   });
 };
 
+const searchFoodCaterings = async (query) => {
+  return asyncHandler(async () => {
+    const foodCaterings = await FoodCatering.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return foodCaterings;
+  });
+};
+
 module.exports = {
   createDiningLocation,
   findAndUpdateDiningLocation,
   findDiningLocationsByCity,
   findDiningLocationById,
   findDiningLocationByIdHelper,
+  searchFoodCaterings,
 };

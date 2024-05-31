@@ -105,10 +105,23 @@ const findRestaurantByIdHelper = async (id) => {
   });
 };
 
+const searchHalalRestaurants = async (query) => {
+  return asyncHandler(async () => {
+    const halalRestaurants = await HalalRestaurant.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return halalRestaurants;
+  });
+};
+
 module.exports = {
   createRestaurant,
   findAndUpdateRestaurant,
   findRestaurantsByCity,
   findRestaurantById,
   findRestaurantByIdHelper,
+  searchHalalRestaurants,
 };

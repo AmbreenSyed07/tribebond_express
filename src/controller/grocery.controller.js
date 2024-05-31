@@ -10,6 +10,7 @@ const {
   findGroceryByIdHelper,
   findGroceryById,
   findGroceriesByCity,
+  searchGroceries,
 } = require("../service/grocery.service");
 const {
   extractImageIdentifier,
@@ -265,6 +266,29 @@ const addReview = async (req, res) => {
   }, res);
 };
 
+const searchGrocery = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const groceries = await searchGroceries(query);
+    if (!groceries || groceries.length === 0) {
+      return sendResponse(res, 404, false, "No groceries found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched groceries.",
+      groceries
+    );
+  }, res);
+};
+
 module.exports = {
   addGrocery,
   editGrocery,
@@ -272,4 +296,5 @@ module.exports = {
   getGroceryById,
   deleteImages,
   addReview,
+  searchGrocery,
 };

@@ -103,10 +103,24 @@ const findMeatByIdHelper = async (id) => {
   });
 };
 
+
+const searchHalalMeats = async (query) => {
+  return asyncHandler(async () => {
+    const halalMeats = await HalalMeat.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return halalMeats;
+  });
+};
+
 module.exports = {
   createMeat,
   findAndUpdateMeat,
   findMeatsByCity,
   findMeatById,
   findMeatByIdHelper,
+  searchHalalMeats,
 };

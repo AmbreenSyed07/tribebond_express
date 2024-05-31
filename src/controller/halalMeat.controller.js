@@ -11,6 +11,7 @@ const {
   findMeatById,
   findRestaurantsByCity,
   findMeatsByCity,
+  searchHalalMeats,
 } = require("../service/halalMeat.service");
 const {
   extractImageIdentifier,
@@ -266,6 +267,29 @@ const addReview = async (req, res) => {
   }, res);
 };
 
+const searchHalalMeat = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const halalMeats = await searchHalalMeats(query);
+    if (!halalMeats || halalMeats.length === 0) {
+      return sendResponse(res, 404, false, "No halal meats found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched halal meats.",
+      halalMeats
+    );
+  }, res);
+};
+
 module.exports = {
   addMeat,
   editMeat,
@@ -273,4 +297,5 @@ module.exports = {
   getMeatById,
   deleteImages,
   addReview,
+  searchHalalMeat,
 };

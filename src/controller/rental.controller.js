@@ -9,6 +9,7 @@ const {
   findRentalByIdHelper,
   findRentalById,
   findRentalsByCity,
+  searchRentals,
 } = require("../service/rental.service");
 const {
   extractImageIdentifier,
@@ -220,6 +221,29 @@ const addRentalReview = async (req, res) => {
   }, res);
 };
 
+const searchRental = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const rentals = await searchRentals(query);
+    if (!rentals || rentals.length === 0) {
+      return sendResponse(res, 404, false, "No rentals found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched rentals.",
+      rentals
+    );
+  }, res);
+};
+
 module.exports = {
   addRental,
   editRental,
@@ -227,4 +251,5 @@ module.exports = {
   getRentalById,
   deleteRentalImages,
   addRentalReview,
+  searchRental,
 };

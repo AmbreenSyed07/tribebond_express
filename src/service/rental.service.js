@@ -122,10 +122,23 @@ const findRentalByIdHelper = async (id) => {
   });
 };
 
+const searchRentals = async (query) => {
+  return asyncHandler(async () => {
+    const rentals = await Rental.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return rentals;
+  });
+};
+
 module.exports = {
   createRental,
   findAndUpdateRental,
   findRentalsByCity,
   findRentalById,
   findRentalByIdHelper,
+  searchRentals,
 };

@@ -102,10 +102,24 @@ const findGroceryByIdHelper = async (id) => {
   });
 };
 
+
+const searchGroceries = async (query) => {
+  return asyncHandler(async () => {
+    const groceries = await Grocery.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return groceries;
+  });
+};
+
 module.exports = {
   createGrocery,
   findAndUpdateGrocery,
   findGroceriesByCity,
   findGroceryById,
   findGroceryByIdHelper,
+  searchGroceries,
 };

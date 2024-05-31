@@ -10,6 +10,7 @@ const {
   findRestaurantByIdHelper,
   findRestaurantById,
   findRestaurantsByCity,
+  searchHalalRestaurants,
 } = require("../service/halalRestaurant.service");
 const {
   extractImageIdentifier,
@@ -290,6 +291,29 @@ const addReview = async (req, res) => {
   }, res);
 };
 
+const searchHalalRestaurant = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const halalRestaurants = await searchHalalRestaurants(query);
+    if (!halalRestaurants || halalRestaurants.length === 0) {
+      return sendResponse(res, 404, false, "No halal restaurants found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched halal restaurants.",
+      halalRestaurants
+    );
+  }, res);
+};
+
 module.exports = {
   addRestaurant,
   editRestaurant,
@@ -297,4 +321,5 @@ module.exports = {
   getRestaurantById,
   deleteImages,
   addReview,
+  searchHalalRestaurant,
 };
