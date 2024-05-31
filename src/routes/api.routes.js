@@ -23,6 +23,7 @@ const realEstateRoutes = require("./realEstate.routes");
 const banquetRoutes = require("./banquet.routes");
 const hennaRoutes = require("./henna.routes");
 const jobRoutes = require("./jobs.routes");
+const buyNSellRoutes = require("./buynsell.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -48,6 +49,7 @@ router.use("/real-estate", realEstateRoutes);
 router.use("/banquet", banquetRoutes);
 router.use("/henna", hennaRoutes);
 router.use("/jobs", jobRoutes);
+router.use("/buy-n-sell", buyNSellRoutes);
 
 
 module.exports = router;
