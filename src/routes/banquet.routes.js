@@ -7,6 +7,7 @@ const {
   getBanquetById,
   deleteBanquetImages,
   addBanquetReview,
+  searchBanquet,
 } = require("../controller/banquet.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -18,5 +19,6 @@ router.get("/display", verifyToken, getBanquets);
 router.get("/display/:id", verifyToken, getBanquetById);
 router.post("/delete-images", verifyToken, deleteBanquetImages);
 router.post("/add-review", verifyToken, addBanquetReview);
+router.post("/search", verifyToken, searchBanquet);
 
 module.exports = router;

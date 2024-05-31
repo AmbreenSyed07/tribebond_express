@@ -9,6 +9,7 @@ const {
   findRealEstateRecordByIdHelper,
   findRealEstateRecordById,
   findRealEstateRecordsByCity,
+  searchRealEstates,
 } = require("../service/realEstate.service");
 const {
   extractImageIdentifier,
@@ -291,6 +292,29 @@ const addRealEstateRecordReview = async (req, res) => {
   }, res);
 };
 
+const searchRealEstate = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const realEstates = await searchRealEstates(query);
+    if (!realEstates || realEstates.length === 0) {
+      return sendResponse(res, 404, false, "No real estates found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched real estates.",
+      realEstates
+    );
+  }, res);
+};
+
 module.exports = {
   addRealEstateRecord,
   editRealEstateRecord,
@@ -298,4 +322,5 @@ module.exports = {
   getRealEstateRecordById,
   deleteRealEstateRecordImages,
   addRealEstateRecordReview,
+  searchRealEstate,
 };

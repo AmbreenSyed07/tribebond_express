@@ -9,6 +9,7 @@ const {
   findHennaByIdHelper,
   findHennaById,
   findHennasByCity,
+  searchHennas,
 } = require("../service/henna.service");
 const {
   extractImageIdentifier,
@@ -262,6 +263,23 @@ const addHennaReview = async (req, res) => {
   }, res);
 };
 
+const searchHenna = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const hennas = await searchHennas(query);
+    if (!hennas || hennas.length === 0) {
+      return sendResponse(res, 404, false, "No hennas found.");
+    }
+
+    return sendResponse(res, 200, true, "Successfully fetched hennas.", hennas);
+  }, res);
+};
+
 module.exports = {
   addHenna,
   editHenna,
@@ -269,4 +287,5 @@ module.exports = {
   getHennaById,
   deleteHennaImages,
   addHennaReview,
+  searchHenna,
 };

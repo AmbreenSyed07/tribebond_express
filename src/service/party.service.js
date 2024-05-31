@@ -119,10 +119,24 @@ const findPartyByIdHelper = async (id) => {
   });
 };
 
+const searchParties = async (query) => {
+  return asyncHandler(async () => {
+    const parties = await Party.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return parties;
+  });
+};
+
+
 module.exports = {
   createParty,
   findAndUpdateParty,
   findPartiesByCity,
   findPartyById,
   findPartyByIdHelper,
+  searchParties,
 };

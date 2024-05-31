@@ -122,10 +122,23 @@ const findDoctorByIdHelper = async (id) => {
   });
 };
 
+const searchDoctors = async (query) => {
+  return asyncHandler(async () => {
+    const doctors = await Doctor.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { services: { $regex: query, $options: "i" } },
+      ],
+    });
+    return doctors;
+  });
+};
+
 module.exports = {
   createDoctor,
   findAndUpdateDoctor,
   findDoctorsByCity,
   findDoctorById,
   findDoctorByIdHelper,
+  searchDoctors,
 };

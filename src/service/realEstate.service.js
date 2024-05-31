@@ -131,10 +131,23 @@ const findRealEstateRecordByIdHelper = async (id) => {
   });
 };
 
+const searchRealEstates = async (query) => {
+  return asyncHandler(async () => {
+    const realEstates = await RealEstateRecord.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { price: { $regex: query, $options: "i" } },
+      ],
+    });
+    return realEstates;
+  });
+};
+
 module.exports = {
   createRealEstateRecord,
   findAndUpdateRealEstateRecord,
   findRealEstateRecordsByCity,
   findRealEstateRecordById,
   findRealEstateRecordByIdHelper,
+  searchRealEstates,
 };

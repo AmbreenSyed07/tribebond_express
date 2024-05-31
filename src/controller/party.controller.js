@@ -9,6 +9,7 @@ const {
   findPartyByIdHelper,
   findPartyById,
   findPartiesByCity,
+  searchParties,
 } = require("../service/party.service");
 const {
   extractImageIdentifier,
@@ -226,6 +227,29 @@ const addPartyReview = async (req, res) => {
   }, res);
 };
 
+const searchParty = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const parties = await searchParties(query);
+    if (!parties || parties.length === 0) {
+      return sendResponse(res, 404, false, "No parties found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched parties.",
+      parties
+    );
+  }, res);
+};
+
 module.exports = {
   addParty,
   editParty,
@@ -233,4 +257,5 @@ module.exports = {
   getPartyById,
   deletePartyImages,
   addPartyReview,
+  searchParty,
 };

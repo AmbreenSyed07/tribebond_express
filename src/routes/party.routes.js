@@ -7,6 +7,7 @@ const {
   getPartyById,
   deletePartyImages,
   addPartyReview,
+  searchParty,
 } = require("../controller/party.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -18,5 +19,6 @@ router.get("/display", verifyToken, getParties);
 router.get("/display/:id", verifyToken, getPartyById);
 router.post("/delete-images", verifyToken, deletePartyImages);
 router.post("/add-review", verifyToken, addPartyReview);
+router.post("/search", verifyToken, searchParty);
 
 module.exports = router;

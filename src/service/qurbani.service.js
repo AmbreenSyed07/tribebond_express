@@ -122,10 +122,23 @@ const findQurbaniByIdHelper = async (id) => {
   });
 };
 
+const searchQurbanis = async (query) => {
+  return asyncHandler(async () => {
+    const qurbanis = await Qurbani.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return qurbanis;
+  });
+};
+
 module.exports = {
   createQurbani,
   findAndUpdateQurbani,
   findQurbanisByCity,
   findQurbaniById,
   findQurbaniByIdHelper,
+  searchQurbanis,
 };

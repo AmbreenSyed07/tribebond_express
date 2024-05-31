@@ -122,10 +122,23 @@ const findBanquetByIdHelper = async (id) => {
   });
 };
 
+const searchBanquets = async (query) => {
+  return asyncHandler(async () => {
+    const banquets = await Banquet.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return banquets;
+  });
+};
+
 module.exports = {
   createBanquet,
   findAndUpdateBanquet,
   findBanquetsByCity,
   findBanquetById,
   findBanquetByIdHelper,
+  searchBanquets,
 };

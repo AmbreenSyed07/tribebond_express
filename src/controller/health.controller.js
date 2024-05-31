@@ -9,6 +9,7 @@ const {
   findHealthRecordByIdHelper,
   findHealthRecordById,
   findHealthRecordsByCity,
+  searchHealthRecords,
 } = require("../service/health.service");
 const {
   extractImageIdentifier,
@@ -269,6 +270,29 @@ const addHealthRecordReview = async (req, res) => {
   }, res);
 };
 
+const searchHealthRecord = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const healthRecords = await searchHealthRecords(query);
+    if (!healthRecords || healthRecords.length === 0) {
+      return sendResponse(res, 404, false, "No health records found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched health records.",
+      healthRecords
+    );
+  }, res);
+};
+
 module.exports = {
   addHealthRecord,
   editHealthRecord,
@@ -276,4 +300,5 @@ module.exports = {
   getHealthRecordById,
   deleteHealthRecordImages,
   addHealthRecordReview,
+  searchHealthRecord,
 };

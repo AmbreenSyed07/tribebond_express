@@ -9,6 +9,7 @@ const {
   findQurbaniByIdHelper,
   findQurbaniById,
   findQurbanisByCity,
+  searchQurbanis,
 } = require("../service/qurbani.service");
 const {
   extractImageIdentifier,
@@ -264,6 +265,29 @@ const addQurbaniReview = async (req, res) => {
   }, res);
 };
 
+const searchQurbani = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const qurbanis = await searchQurbanis(query);
+    if (!qurbanis || qurbanis.length === 0) {
+      return sendResponse(res, 404, false, "No qurbanis found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched qurbanis.",
+      qurbanis
+    );
+  }, res);
+};
+
 module.exports = {
   addQurbani,
   editQurbani,
@@ -271,4 +295,5 @@ module.exports = {
   getQurbaniById,
   deleteQurbaniImages,
   addQurbaniReview,
+  searchQurbani,
 };

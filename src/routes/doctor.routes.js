@@ -7,6 +7,7 @@ const {
   getDoctorById,
   deleteDoctorImages,
   addDoctorReview,
+  searchDoctor,
 } = require("../controller/doctor.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -18,5 +19,6 @@ router.get("/display", verifyToken, getDoctors);
 router.get("/display/:id", verifyToken, getDoctorById);
 router.post("/delete-images", verifyToken, deleteDoctorImages);
 router.post("/add-review", verifyToken, addDoctorReview);
+router.post("/search", verifyToken, searchDoctor);
 
 module.exports = router;

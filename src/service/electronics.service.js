@@ -124,10 +124,23 @@ const findElectronicByIdHelper = async (id) => {
   });
 };
 
+const searchElectronics = async (query) => {
+  return asyncHandler(async () => {
+    const electronics = await Electronic.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { services: { $regex: query, $options: "i" } },
+      ],
+    });
+    return electronics;
+  });
+};
+
 module.exports = {
   createElectronic,
   findAndUpdateElectronic,
   findElectronicsByCity,
   findElectronicById,
   findElectronicByIdHelper,
+  searchElectronics,
 };

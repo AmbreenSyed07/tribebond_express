@@ -7,6 +7,7 @@ const {
   getHennaById,
   deleteHennaImages,
   addHennaReview,
+  searchHenna,
 } = require("../controller/henna.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -18,5 +19,6 @@ router.get("/display", verifyToken, getHennas);
 router.get("/display/:id", verifyToken, getHennaById);
 router.post("/delete-images", verifyToken, deleteHennaImages);
 router.post("/add-review", verifyToken, addHennaReview);
+router.post("/search", verifyToken, searchHenna);
 
 module.exports = router;

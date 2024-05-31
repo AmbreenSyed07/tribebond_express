@@ -9,6 +9,7 @@ const {
   findBanquetByIdHelper,
   findBanquetById,
   findBanquetsByCity,
+  searchBanquets,
 } = require("../service/banquet.service");
 const {
   extractImageIdentifier,
@@ -264,6 +265,29 @@ const addBanquetReview = async (req, res) => {
   }, res);
 };
 
+const searchBanquet = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const banquets = await searchBanquets(query);
+    if (!banquets || banquets.length === 0) {
+      return sendResponse(res, 404, false, "No banquets found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched banquets.",
+      banquets
+    );
+  }, res);
+};
+
 module.exports = {
   addBanquet,
   editBanquet,
@@ -271,4 +295,5 @@ module.exports = {
   getBanquetById,
   deleteBanquetImages,
   addBanquetReview,
+  searchBanquet,
 };

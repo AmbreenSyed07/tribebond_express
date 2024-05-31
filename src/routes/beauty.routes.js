@@ -7,6 +7,7 @@ const {
   getBeautyRecordById,
   deleteBeautyRecordImages,
   addBeautyRecordReview,
+  searchBeautyRecord,
 } = require("../controller/beauty.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -18,5 +19,6 @@ router.get("/display", verifyToken, getBeautyRecords);
 router.get("/display/:id", verifyToken, getBeautyRecordById);
 router.post("/delete-images", verifyToken, deleteBeautyRecordImages);
 router.post("/add-review", verifyToken, addBeautyRecordReview);
+router.post("/search", verifyToken, searchBeautyRecord);
 
 module.exports = router;

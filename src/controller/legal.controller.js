@@ -10,6 +10,7 @@ const {
   findLegalById,
   findLegalsByCity,
   deleteLegalImages: deleteLegalImagesService,
+  searchLegals,
 } = require("../service/legal.service");
 const {
   extractImageIdentifier,
@@ -273,6 +274,23 @@ const addLegalReview = async (req, res) => {
   }, res);
 };
 
+const searchLegal = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const legals = await searchLegals(query);
+    if (!legals || legals.length === 0) {
+      return sendResponse(res, 404, false, "No legals found.");
+    }
+
+    return sendResponse(res, 200, true, "Successfully fetched legals.", legals);
+  }, res);
+};
+
 module.exports = {
   addLegal,
   editLegal,
@@ -280,4 +298,5 @@ module.exports = {
   getLegalById,
   deleteLegalImages,
   addLegalReview,
+  searchLegal,
 };

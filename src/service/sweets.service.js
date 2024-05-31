@@ -105,10 +105,23 @@ const findSweetShopByIdHelper = async (id) => {
   });
 };
 
+const searchSweets = async (query) => {
+  return asyncHandler(async () => {
+    const sweets = await SweetShop.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return sweets;
+  });
+};
+
 module.exports = {
   createSweetShop,
   findAndUpdateSweetShop,
   findSweetShopsByCity,
   findSweetShopById,
   findSweetShopByIdHelper,
+  searchSweets,
 };

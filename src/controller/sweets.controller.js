@@ -1,6 +1,6 @@
 /** @format */
 
-const { asyncHandler } = require("../helper/async-error.helper");
+const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
 const { isNotEmpty } = require("../helper/validate.helpers");
 const {
@@ -9,6 +9,7 @@ const {
   findSweetShopByIdHelper,
   findSweetShopById,
   findSweetShopsByCity,
+  searchSweets,
 } = require("../service/sweets.service");
 const {
   extractImageIdentifier,
@@ -17,7 +18,7 @@ const {
 } = require("../helper/upload.helpers");
 
 const addSweetShop = async (req, res) => {
-  return asyncHandler(async () => {
+  return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
     let shop_images = req && req.files && req.files.images;
@@ -90,7 +91,7 @@ const addSweetShop = async (req, res) => {
 };
 
 const editSweetShop = async (req, res) => {
-  return asyncHandler(async () => {
+  return asyncErrorHandler(async () => {
     const { id: shopId } = req.params;
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
@@ -159,7 +160,7 @@ const editImage = async (sweetShopId, images, res) => {
 };
 
 const getSweetsShops = async (req, res) => {
-  return asyncHandler(async () => {
+  return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
     const sweetShops = await findSweetShopsByCity(city);
     if (!sweetShops) {
@@ -177,7 +178,7 @@ const getSweetsShops = async (req, res) => {
 };
 
 const getSweetShopById = async (req, res) => {
-  return asyncHandler(async () => {
+  return asyncErrorHandler(async () => {
     const { id } = req.params;
     const sweetShop = await findSweetShopById(id);
     if (!sweetShop) {
@@ -194,7 +195,7 @@ const getSweetShopById = async (req, res) => {
 };
 
 const deleteSweetShopImages = async (req, res) => {
-  return asyncHandler(async () => {
+  return asyncErrorHandler(async () => {
     const { shopId, imageUrls } = req.body;
     const sweetShop = await findSweetShopByIdHelper(shopId);
     if (!sweetShop) {
@@ -225,7 +226,7 @@ const deleteSweetShopImages = async (req, res) => {
 };
 
 const addSweetShopReview = async (req, res) => {
-  return asyncHandler(async () => {
+  return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { shopId, review } = req.body;
     if (!isNotEmpty(review)) {
@@ -242,6 +243,23 @@ const addSweetShopReview = async (req, res) => {
   }, res);
 };
 
+const searchSweet = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const sweets = await searchSweets(query);
+    if (!sweets || sweets.length === 0) {
+      return sendResponse(res, 404, false, "No sweets found.");
+    }
+
+    return sendResponse(res, 200, true, "Successfully fetched sweets.", sweets);
+  }, res);
+};
+
 module.exports = {
   addSweetShop,
   editSweetShop,
@@ -249,4 +267,5 @@ module.exports = {
   getSweetShopById,
   deleteSweetShopImages,
   addSweetShopReview,
+  searchSweet,
 };

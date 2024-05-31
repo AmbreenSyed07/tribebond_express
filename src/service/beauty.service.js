@@ -124,10 +124,23 @@ const findBeautyRecordByIdHelper = async (id) => {
   });
 };
 
+const searchBeautyRecords = async (query) => {
+  return asyncHandler(async () => {
+    const beautyRecords = await BeautyRecord.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { services: { $regex: query, $options: "i" } },
+      ],
+    });
+    return beautyRecords;
+  });
+};
+
 module.exports = {
   createBeautyRecord,
   findAndUpdateBeautyRecord,
   findBeautyRecordsByCity,
   findBeautyRecordById,
   findBeautyRecordByIdHelper,
+  searchBeautyRecords,
 };

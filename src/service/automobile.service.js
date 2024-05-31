@@ -121,10 +121,23 @@ const findAutomobileByIdHelper = async (id) => {
   });
 };
 
+const searchAutomobiles = async (query) => {
+  return asyncHandler(async () => {
+    const automobiles = await Automobile.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return automobiles;
+  });
+};
+
 module.exports = {
   createAutomobile,
   findAndUpdateAutomobile,
   findAutomobilesByCity,
   findAutomobileById,
   findAutomobileByIdHelper,
+  searchAutomobiles,
 };

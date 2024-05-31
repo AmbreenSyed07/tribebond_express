@@ -122,10 +122,23 @@ const findHennaByIdHelper = async (id) => {
   });
 };
 
+const searchHennas = async (query) => {
+  return asyncHandler(async () => {
+    const hennas = await Henna.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
+      ],
+    });
+    return hennas;
+  });
+};
+
 module.exports = {
   createHenna,
   findAndUpdateHenna,
   findHennasByCity,
   findHennaById,
   findHennaByIdHelper,
+  searchHennas,
 };

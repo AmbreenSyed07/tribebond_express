@@ -9,6 +9,7 @@ const {
   findElectronicByIdHelper,
   findElectronicById,
   findElectronicsByCity,
+  searchElectronics,
 } = require("../service/electronics.service");
 const {
   extractImageIdentifier,
@@ -270,6 +271,29 @@ const addElectronicReview = async (req, res) => {
   }, res);
 };
 
+const searchElectronic = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const electronics = await searchElectronics(query);
+    if (!electronics || electronics.length === 0) {
+      return sendResponse(res, 404, false, "No electronics found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched electronics.",
+      electronics
+    );
+  }, res);
+};
+
 module.exports = {
   addElectronic,
   editElectronic,
@@ -277,4 +301,5 @@ module.exports = {
   getElectronicById,
   deleteElectronicImages,
   addElectronicReview,
+  searchElectronic,
 };

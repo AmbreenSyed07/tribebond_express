@@ -9,6 +9,7 @@ const {
   findBeautyRecordByIdHelper,
   findBeautyRecordById,
   findBeautyRecordsByCity,
+  searchBeautyRecords,
 } = require("../service/beauty.service");
 const {
   extractImageIdentifier,
@@ -298,6 +299,29 @@ const addBeautyRecordReview = async (req, res) => {
   }, res);
 };
 
+const searchBeautyRecord = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const beautyRecords = await searchBeautyRecords(query);
+    if (!beautyRecords || beautyRecords.length === 0) {
+      return sendResponse(res, 404, false, "No beauty records found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched beauty records.",
+      beautyRecords
+    );
+  }, res);
+};
+
 module.exports = {
   addBeautyRecord,
   editBeautyRecord,
@@ -305,4 +329,5 @@ module.exports = {
   getBeautyRecordById,
   deleteBeautyRecordImages,
   addBeautyRecordReview,
+  searchBeautyRecord,
 };

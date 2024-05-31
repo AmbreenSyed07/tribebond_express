@@ -124,10 +124,23 @@ const findHealthRecordByIdHelper = async (id) => {
   });
 };
 
+const searchHealthRecords = async (query) => {
+  return asyncHandler(async () => {
+    const healthRecords = await HealthRecord.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { services: { $regex: query, $options: "i" } },
+      ],
+    });
+    return healthRecords;
+  });
+};
+
 module.exports = {
   createHealthRecord,
   findAndUpdateHealthRecord,
   findHealthRecordsByCity,
   findHealthRecordById,
   findHealthRecordByIdHelper,
+  searchHealthRecords,
 };

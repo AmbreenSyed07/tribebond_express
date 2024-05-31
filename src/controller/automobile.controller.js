@@ -9,6 +9,7 @@ const {
   findAutomobileByIdHelper,
   findAutomobileById,
   findAutomobilesByCity,
+  searchAutomobiles,
 } = require("../service/automobile.service");
 const {
   extractImageIdentifier,
@@ -248,6 +249,29 @@ const addAutomobileReview = async (req, res) => {
   }, res);
 };
 
+const searchAutomobile = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const automobiles = await searchAutomobiles(query);
+    if (!automobiles || automobiles.length === 0) {
+      return sendResponse(res, 404, false, "No automobiles found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched automobiles.",
+      automobiles
+    );
+  }, res);
+};
+
 module.exports = {
   addAutomobile,
   editAutomobile,
@@ -255,4 +279,5 @@ module.exports = {
   getAutomobileById,
   deleteAutomobileImages,
   addAutomobileReview,
+  searchAutomobile,
 };

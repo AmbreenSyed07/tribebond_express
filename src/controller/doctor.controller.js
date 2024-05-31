@@ -9,6 +9,7 @@ const {
   findDoctorByIdHelper,
   findDoctorById,
   findDoctorsByCity,
+  searchDoctors,
 } = require("../service/doctor.service");
 const {
   extractImageIdentifier,
@@ -244,6 +245,29 @@ const addDoctorReview = async (req, res) => {
   }, res);
 };
 
+const searchDoctor = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { query } = req.body;
+
+    if (!query) {
+      return sendResponse(res, 400, false, "Query parameter is required.");
+    }
+
+    const doctors = await searchDoctors(query);
+    if (!doctors || doctors.length === 0) {
+      return sendResponse(res, 404, false, "No doctors found.");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Successfully fetched doctors.",
+      doctors
+    );
+  }, res);
+};
+
 module.exports = {
   addDoctor,
   editDoctor,
@@ -251,4 +275,5 @@ module.exports = {
   getDoctorById,
   deleteDoctorImages,
   addDoctorReview,
+  searchDoctor,
 };

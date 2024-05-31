@@ -122,10 +122,23 @@ const findLegalByIdHelper = async (id) => {
   });
 };
 
+const searchLegals = async (query) => {
+  return asyncHandler(async () => {
+    const legals = await Legal.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { services: { $regex: query, $options: "i" } },
+      ],
+    });
+    return legals;
+  });
+};
+
 module.exports = {
   createLegal,
   findAndUpdateLegal,
   findLegalsByCity,
   findLegalById,
   findLegalByIdHelper,
+  searchLegals,
 };
