@@ -44,13 +44,9 @@ const findGroceryById = async (id) => {
           }
         });
 
-      if (groceryObj.thumbnail) {
-        // Modify the thumbnail path
-        groceryObj.thumbnail = `${base_url}public/data/grocery/thumbnail/${groceryObj._id}/${groceryObj.thumbnail}`;
-      }
       if (groceryObj.images && groceryObj.images.length > 0) {
         groceryObj.images = groceryObj.images.map((img) => {
-          return `${base_url}public/data/grocery/images/${groceryObj._id}/${img}`;
+          return `${base_url}public/data/grocery/${groceryObj._id}/${img}`;
         });
       }
       return groceryObj;
@@ -69,9 +65,7 @@ const findGroceriesByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .exec();
-    // return groceries.length > 0 ? groceries : false;
     if (groceries.length > 0) {
-      // Map through groceries and check for a thumbnail
       const modifiedGroceries = groceries.map((grocery) => {
         let groceryObj = grocery.toObject();
 
@@ -87,16 +81,12 @@ const findGroceriesByCity = async (city) => {
             }
           });
 
-        if (groceryObj.thumbnail) {
-          // Modify the thumbnail path
-          groceryObj.thumbnail = `${base_url}public/data/grocery/thumbnail/${groceryObj._id}/${groceryObj.thumbnail}`;
-        }
         if (groceryObj.images && groceryObj.images.length > 0) {
           groceryObj.images = groceryObj.images.map((img) => {
-            return `${base_url}public/data/grocery/images/${groceryObj._id}/${img}`;
+            return `${base_url}public/data/grocery/${groceryObj._id}/${img}`;
           });
         }
-        return groceryObj; // Return the original grocery if no thumbnail
+        return groceryObj;
       });
       return modifiedGroceries;
     } else {

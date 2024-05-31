@@ -22,7 +22,6 @@ const addMeat = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
-    let meat_thumbnail = req && req.files && req.files.thumbnail;
     let meat_images = req && req.files && req.files.images;
 
     if (!isNotEmpty(name)) {
@@ -53,34 +52,12 @@ const addMeat = async (req, res) => {
         "Unable to add new halal meat shop."
       );
     } else {
-      let thumbnail;
-      if (meat_thumbnail) {
-        const newFile = await uploadAndCreateImage(
-          meat_thumbnail,
-          "halal-meat/thumbnail",
-          newMeat._id,
-          res
-        );
-        thumbnail = newFile;
-      }
-
-      if (thumbnail) {
-        let updatedMeat = await findAndUpdateMeat(
-          { _id: newMeat._id },
-          {
-            thumbnail: thumbnail,
-          }
-        );
-        if (!updatedMeat) {
-          return sendResponse(res, 400, false, "Unable to save thumbnail.");
-        }
-      }
       if (meat_images) {
         let imgArray = [];
         if (!meat_images[0]) {
           let fileName = await uploadAndCreateImage(
             meat_images,
-            "halal-meat/images",
+            "halal-meat",
             newMeat._id,
             res
           );
@@ -89,7 +66,7 @@ const addMeat = async (req, res) => {
           for (let img of meat_images) {
             let fileName = await uploadAndCreateImage(
               img,
-              "halal-meat/images",
+              "halal-meat",
               newMeat._id,
               res
             );
@@ -123,6 +100,20 @@ const editMeat = async (req, res) => {
     const { id: meatId } = req.params;
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
+
+    const checkMeat = await findMeatByIdHelper(meatId);
+    if (!checkMeat) {
+      return sendResponse(res, 404, false, "Restaurant not found");
+    }
+
+    if (checkMeat.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this halal meat record."
+      );
+    }
 
     if (req.files) {
       const { images } = req.files;
@@ -166,7 +157,7 @@ const editImage = async (meatId, images, res) => {
   if (!images[0]) {
     let fileName = await uploadAndCreateImage(
       images,
-      "halal-meat/images",
+      "halal-meat",
       meatId,
       res
     );
@@ -175,7 +166,7 @@ const editImage = async (meatId, images, res) => {
     for (let file of images) {
       let fileName = await uploadAndCreateImage(
         file,
-        "halal-meat/images",
+        "halal-meat",
         meatId,
         res
       );
@@ -230,12 +221,21 @@ const deleteImages = async (req, res) => {
       return sendResponse(res, 404, false, "Meat not found");
     }
 
+    if (meat.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this halal meat record."
+      );
+    }
+
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
       const imageIdentifier = extractImageIdentifier(imageUrl);
       const deletedImage = await deleteImageFromStorage(
         imageIdentifier,
         meatId,
-        "halal-meat/images"
+        "halal-meat"
       );
       meat.images = meat.images.filter((img) => img !== imageIdentifier);
     });

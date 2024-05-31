@@ -38,10 +38,6 @@ const halalMeatSchema = new mongoose.Schema(
       //   "Please enter a valid URL",
       // ],
     },
-    thumbnail: {
-      type: String, // URL to an image file
-      required: false,
-    },
     images: [
       {
         type: String, // Assuming these are URLs to images

@@ -44,13 +44,9 @@ const findMeatById = async (id) => {
           }
         });
 
-      if (meatObj.thumbnail) {
-        // Modify the thumbnail path
-        meatObj.thumbnail = `${base_url}public/data/halal-meat/thumbnail/${meatObj._id}/${meatObj.thumbnail}`;
-      }
       if (meatObj.images && meatObj.images.length > 0) {
         meatObj.images = meatObj.images.map((img) => {
-          return `${base_url}public/data/halal-meat/images/${meatObj._id}/${img}`;
+          return `${base_url}public/data/halal-meat/${meatObj._id}/${img}`;
         });
       }
       return meatObj;
@@ -71,7 +67,6 @@ const findMeatsByCity = async (city) => {
       .exec();
     // return meats.length > 0 ? meats : false;
     if (meats.length > 0) {
-      // Map through meats and check for a thumbnail
       const modifiedMeats = meats.map((meat) => {
         let meatObj = meat.toObject();
 
@@ -87,16 +82,12 @@ const findMeatsByCity = async (city) => {
             }
           });
 
-        if (meatObj.thumbnail) {
-          // Modify the thumbnail path
-          meatObj.thumbnail = `${base_url}public/data/halal-meat/thumbnail/${meatObj._id}/${meatObj.thumbnail}`;
-        }
         if (meatObj.images && meatObj.images.length > 0) {
           meatObj.images = meatObj.images.map((img) => {
-            return `${base_url}public/data/halal-meat/images/${meatObj._id}/${img}`;
+            return `${base_url}public/data/halal-meat/${meatObj._id}/${img}`;
           });
         }
-        return meatObj; // Return the original meat if no thumbnail
+        return meatObj;
       });
       return modifiedMeats;
     } else {

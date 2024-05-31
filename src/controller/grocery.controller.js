@@ -21,7 +21,6 @@ const addGrocery = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
-    let grocery_thumbnail = req && req.files && req.files.thumbnail;
     let grocery_images = req && req.files && req.files.images;
 
     if (!isNotEmpty(name)) {
@@ -47,34 +46,12 @@ const addGrocery = async (req, res) => {
     if (!newGrocery) {
       return sendResponse(res, 400, false, "Unable to add new grocery spot.");
     } else {
-      let thumbnail;
-      if (grocery_thumbnail) {
-        const newFile = await uploadAndCreateImage(
-          grocery_thumbnail,
-          "grocery/thumbnail",
-          newGrocery._id,
-          res
-        );
-        thumbnail = newFile;
-      }
-
-      if (thumbnail) {
-        let updatedGrocery = await findAndUpdateGrocery(
-          { _id: newGrocery._id },
-          {
-            thumbnail: thumbnail,
-          }
-        );
-        if (!updatedGrocery) {
-          return sendResponse(res, 400, false, "Unable to save thumbnail.");
-        }
-      }
       if (grocery_images) {
         let imgArray = [];
         if (!grocery_images[0]) {
           let fileName = await uploadAndCreateImage(
             grocery_images,
-            "grocery/images",
+            "grocery",
             newGrocery._id,
             res
           );
@@ -83,7 +60,7 @@ const addGrocery = async (req, res) => {
           for (let img of grocery_images) {
             let fileName = await uploadAndCreateImage(
               img,
-              "grocery/images",
+              "grocery",
               newGrocery._id,
               res
             );
@@ -117,6 +94,21 @@ const editGrocery = async (req, res) => {
     const { id: groceryId } = req.params;
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
+
+    const checkGrocery = await findGroceryByIdHelper(groceryId);
+    if (!checkGrocery) {
+      return sendResponse(res, 404, false, "Grocery not found");
+    }
+
+    // Check if the checkGrocery's createdBy is equal to the user's id
+    if (checkGrocery.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this grocery."
+      );
+    }
 
     if (req.files) {
       const { images } = req.files;
@@ -160,7 +152,7 @@ const editImage = async (groceryId, images, res) => {
   if (!images[0]) {
     let fileName = await uploadAndCreateImage(
       images,
-      "grocery/images",
+      "grocery",
       groceryId,
       res
     );
@@ -169,7 +161,7 @@ const editImage = async (groceryId, images, res) => {
     for (let file of images) {
       let fileName = await uploadAndCreateImage(
         file,
-        "grocery/images",
+        "grocery",
         groceryId,
         res
       );
@@ -223,13 +215,22 @@ const deleteImages = async (req, res) => {
     if (!grocery) {
       return sendResponse(res, 404, false, "Grocery not found");
     }
+    // Check if the checkGrocery's createdBy is equal to the user's id
+    if (grocery.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this grocery."
+      );
+    }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
       const imageIdentifier = extractImageIdentifier(imageUrl);
       const deletedImage = await deleteImageFromStorage(
         imageIdentifier,
         groceryId,
-        "grocery/images"
+        "grocery"
       );
       grocery.images = grocery.images.filter((img) => img !== imageIdentifier);
     });
