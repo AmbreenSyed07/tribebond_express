@@ -24,6 +24,7 @@ const banquetRoutes = require("./banquet.routes");
 const hennaRoutes = require("./henna.routes");
 const jobRoutes = require("./jobs.routes");
 const buyNSellRoutes = require("./buynsell.routes");
+const mosqueRoutes = require("./mosque.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -50,6 +51,7 @@ router.use("/banquet", banquetRoutes);
 router.use("/henna", hennaRoutes);
 router.use("/jobs", jobRoutes);
 router.use("/buy-n-sell", buyNSellRoutes);
+router.use("/mosque", mosqueRoutes);
 
 
 module.exports = router;
