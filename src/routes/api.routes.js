@@ -25,6 +25,7 @@ const hennaRoutes = require("./henna.routes");
 const jobRoutes = require("./jobs.routes");
 const buyNSellRoutes = require("./buynsell.routes");
 const mosqueRoutes = require("./mosque.routes");
+const freeGiveawayRoutes = require("./freeGiveaway.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -52,6 +53,6 @@ router.use("/henna", hennaRoutes);
 router.use("/jobs", jobRoutes);
 router.use("/buy-n-sell", buyNSellRoutes);
 router.use("/mosque", mosqueRoutes);
-
+router.use("/free-giveaway", freeGiveawayRoutes);
 
 module.exports = router;
