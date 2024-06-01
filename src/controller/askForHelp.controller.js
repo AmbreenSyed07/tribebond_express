@@ -32,6 +32,8 @@ const addHelpRequest = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter the city.");
     } else if (!isNotEmpty(phone)) {
       return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(category)) {
+      return sendResponse(res, 400, false, "Please select a category.");
     }
     const info = {
       name,
