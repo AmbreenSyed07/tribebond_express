@@ -26,6 +26,7 @@ const jobRoutes = require("./jobs.routes");
 const buyNSellRoutes = require("./buynsell.routes");
 const mosqueRoutes = require("./mosque.routes");
 const freeGiveawayRoutes = require("./freeGiveaway.routes");
+const askForHelpRoutes = require("./askForHelp.routes");
 
 router.use("/user", userRoutes);
 router.use("/education-types", eduTypesRoutes);
@@ -54,5 +55,6 @@ router.use("/jobs", jobRoutes);
 router.use("/buy-n-sell", buyNSellRoutes);
 router.use("/mosque", mosqueRoutes);
 router.use("/free-giveaway", freeGiveawayRoutes);
+router.use("/ask-for-help", askForHelpRoutes);
 
 module.exports = router;
