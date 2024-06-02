@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Henna = require("../model/henna.model");
 
 const createHenna = async (info) => {
@@ -28,7 +28,7 @@ const findAndUpdateHenna = async (findInfo, setInfo) => {
 
 const findHennaById = async (id) => {
   return asyncHandler(async () => {
-    let henna = await Henna.findById({ _id: id })
+    let henna = await Henna.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -117,7 +117,7 @@ const findHennasByCity = async (city) => {
 
 const findHennaByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const henna = await Henna.findById(id);
+    const henna = await Henna.findOne({ _id: id, status: true });
     return henna ? henna : false;
   });
 };
@@ -129,8 +129,11 @@ const searchHennas = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return hennas;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return hennas.length > 0 ? modifyResponse(hennas, "henna") : false;
   });
 };
 

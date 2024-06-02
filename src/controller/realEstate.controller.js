@@ -109,8 +109,6 @@ const editRealEstateRecord = async (req, res) => {
     if (!realEstateRecord) {
       return sendResponse(res, 404, false, "Real estate record not found");
     }
-
-    // Check if the Real estate record's createdBy is equal to the user's id
     if (realEstateRecord.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
@@ -196,7 +194,16 @@ const editImage = async (realEstateRecordId, images, res) => {
 const getRealEstateRecords = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const realEstateRecords = await findRealEstateRecordsByCity(city);
+
+    const { query } = req.query;
+
+    let realEstateRecords;
+    if (query) {
+      realEstateRecords = await searchRealEstates(query);
+    } else {
+      realEstateRecords = await findRealEstateRecordsByCity(city);
+    }
+
     if (!realEstateRecords) {
       return sendResponse(res, 400, false, "No real estate records found.");
     }

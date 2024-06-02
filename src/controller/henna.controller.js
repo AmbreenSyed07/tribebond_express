@@ -188,7 +188,16 @@ const editImage = async (hennaId, images, res) => {
 const getHennas = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const hennas = await findHennasByCity(city);
+
+ const { query } = req.query;
+
+ let hennas;
+ if (query) {
+   hennas = await searchHennas(query);
+ } else {
+   hennas = await findHennasByCity(city);
+ }
+
     if (!hennas) {
       return sendResponse(res, 400, false, "No hennas found.");
     }

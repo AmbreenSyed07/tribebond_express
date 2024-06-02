@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const RealEstateRecord = require("../model/realEstate.model");
 
 const createRealEstateRecord = async (info) => {
@@ -30,7 +30,10 @@ const findAndUpdateRealEstateRecord = async (findInfo, setInfo) => {
 
 const findRealEstateRecordById = async (id) => {
   return asyncHandler(async () => {
-    let realEstateRecord = await RealEstateRecord.findById({ _id: id })
+    let realEstateRecord = await RealEstateRecord.findOne({
+      _id: id,
+      status: true,
+    })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -126,7 +129,10 @@ const findRealEstateRecordsByCity = async (city) => {
 
 const findRealEstateRecordByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const realEstateRecord = await RealEstateRecord.findById(id);
+    const realEstateRecord = await RealEstateRecord.findOne({
+      _id: id,
+      status: true,
+    });
     return realEstateRecord ? realEstateRecord : false;
   });
 };
@@ -138,8 +144,15 @@ const searchRealEstates = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { price: { $regex: query, $options: "i" } },
       ],
-    });
-    return realEstates;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    if (realEstates.length > 0) {
+      return modifyResponse(realEstates, "realEstate");
+    } else {
+      return false;
+    }
   });
 };
 

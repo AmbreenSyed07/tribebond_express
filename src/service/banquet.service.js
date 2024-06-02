@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Banquet = require("../model/banquet.model");
 
 const createBanquet = async (info) => {
@@ -28,7 +28,7 @@ const findAndUpdateBanquet = async (findInfo, setInfo) => {
 
 const findBanquetById = async (id) => {
   return asyncHandler(async () => {
-    const banquet = await Banquet.findById({ _id: id })
+    const banquet = await Banquet.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -117,7 +117,7 @@ const findBanquetsByCity = async (city) => {
 
 const findBanquetByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const banquet = await Banquet.findById(id);
+    const banquet = await Banquet.findOne({ _id: id, status: true });
     return banquet ? banquet : false;
   });
 };
@@ -129,8 +129,11 @@ const searchBanquets = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return banquets;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return banquets.length > 0 ? modifyResponse(banquets, "banquet") : false;
   });
 };
 

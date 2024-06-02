@@ -175,7 +175,16 @@ const editImage = async (banquetId, images, res) => {
 const getBanquets = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const banquets = await findBanquetsByCity(city);
+
+    const { query } = req.query;
+
+    let banquets;
+    if (query) {
+      banquets = await searchBanquets(query);
+    } else {
+      banquets = await findBanquetsByCity(city);
+    }
+
     if (!banquets) {
       return sendResponse(res, 400, false, "No banquets found.");
     }
