@@ -109,21 +109,38 @@ function generatePassword() {
   return result;
 }
 
-function getDayNumbersForDateRange(start, end) {
-  let current = moment(start);
-  const endMoment = moment(end);
-  const dayNumbers = [];
+const modifyResponse = (responseArray, img_folder) => {
+  return responseArray.map((response) => {
+    let responseObj = response.toObject();
 
-  while (current.isBefore(endMoment)) {
-    // In JavaScript, day() returns 0 for Sunday, 1 for Monday, and so on.
-    // We adjust it to match your database, where 1 is Monday and 7 is Sunday.
-    const dayNumber = current.day() === 0 ? 7 : current.day();
-    dayNumbers.push(dayNumber);
-    current.add(1, "days");
-  }
+    if (
+      responseObj.createdBy &&
+      responseObj.createdBy.profilePicture &&
+      !responseObj.createdBy.profilePicture.startsWith(base_url)
+    ) {
+      responseObj.createdBy.profilePicture = `${base_url}public/data/profile/${responseObj.createdBy._id}/${responseObj.createdBy.profilePicture}`;
+    }
 
-  return dayNumbers;
-}
+    responseObj?.reviews &&
+      responseObj?.reviews.length > 0 &&
+      responseObj?.reviews.forEach((review) => {
+        if (
+          review.user &&
+          review.user.profilePicture &&
+          !review.user.profilePicture.startsWith(base_url)
+        ) {
+          review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
+        }
+      });
+
+    if (responseObj.images && responseObj.images.length > 0) {
+      responseObj.images = responseObj.images.map((img) => {
+        return `${base_url}public/data/${img_folder}/${responseObj._id}/${img}`;
+      });
+    }
+    return responseObj;
+  });
+};
 
 module.exports = {
   formatDate,
@@ -138,5 +155,5 @@ module.exports = {
   parseJson,
   getDatesWithDays,
   generatePassword,
-  getDayNumbersForDateRange,
+  modifyResponse,
 };

@@ -95,6 +95,21 @@ const editRental = async (req, res) => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
 
+    const rentalRecord = await findRentalByIdHelper(rentalId);
+    if (!rentalRecord) {
+      return sendResponse(res, 404, false, "Rental record not found");
+    }
+
+    // Check if the Beauty record's createdBy is equal to the user's id
+    if (rentalRecord.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this rental record."
+      );
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(rentalId, images, res);
@@ -151,7 +166,12 @@ const editImage = async (rentalId, images, res) => {
 const getRentals = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const rentals = await findRentalsByCity(city);
+    const { query } = req.query;
+    if (query) {
+      rentals = await searchRentals(query);
+    } else {
+      rentals = await findRentalsByCity(city);
+    }
     if (!rentals) {
       return sendResponse(res, 400, false, "No rentals found.");
     }
@@ -180,9 +200,18 @@ const getRentalById = async (req, res) => {
 const deleteRentalImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { rentalId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
     const rental = await findRentalByIdHelper(rentalId);
     if (!rental) {
       return sendResponse(res, 404, false, "Rental not found");
+    }
+    if (rental.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this rental record."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

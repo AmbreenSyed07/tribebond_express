@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Rental = require("../model/rental.model");
 
 const createRental = async (info) => {
@@ -117,7 +117,7 @@ const findRentalsByCity = async (city) => {
 
 const findRentalByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const rental = await Rental.findById(id);
+    const rental = await Rental.findOne({ _id: id, status: true });
     return rental ? rental : false;
   });
 };
@@ -129,8 +129,16 @@ const searchRentals = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return rentals;
+      status: true,
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    if (rentals.length > 0) {
+      return modifyResponse(rentals, "rental");
+    } else {
+      return false;
+    }
   });
 };
 
