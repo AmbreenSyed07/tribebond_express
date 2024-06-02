@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Party = require("../model/party.model");
 
 const createParty = async (info) => {
@@ -78,13 +78,13 @@ const findPartiesByCity = async (city) => {
       const modifiedParties = parties.map((party) => {
         let partyObj = party.toObject();
 
-        // if (
-        //   partyObj.createdBy &&
-        //   partyObj.createdBy.profilePicture &&
-        //   !partyObj.createdBy.profilePicture.startsWith(base_url)
-        // ) {
-        //   partyObj.createdBy.profilePicture = `${base_url}public/data/profile/${partyObj.createdBy._id}/${partyObj.createdBy.profilePicture}`;
-        // }
+        if (
+          partyObj.createdBy &&
+          partyObj.createdBy.profilePicture &&
+          !partyObj.createdBy.profilePicture.startsWith(base_url)
+        ) {
+          partyObj.createdBy.profilePicture = `${base_url}public/data/profile/${partyObj.createdBy._id}/${partyObj.createdBy.profilePicture}`;
+        }
 
         partyObj?.reviews &&
           partyObj?.reviews.length > 0 &&
@@ -114,7 +114,7 @@ const findPartiesByCity = async (city) => {
 
 const findPartyByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const party = await Party.findById(id);
+    const party = await Party.findOne({ _id: id, status: true });
     return party ? party : false;
   });
 };
@@ -126,8 +126,11 @@ const searchParties = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return parties;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return parties.length > 0 ? modifyResponse(parties, "party") : false;
   });
 };
 

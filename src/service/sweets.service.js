@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const SweetShop = require("../model/sweets.model");
 
 const createSweetShop = async (info) => {
@@ -66,6 +66,7 @@ const findSweetShopsByCity = async (city) => {
       status: true,
     })
       .collation({ locale: "en", strength: 2 })
+      .populate("createdBy", "firstName lastName profilePicture")
       .populate("reviews.user", "firstName lastName profilePicture")
       .exec();
     if (sweetShops.length > 0) {
@@ -100,7 +101,7 @@ const findSweetShopsByCity = async (city) => {
 
 const findSweetShopByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const sweetShop = await SweetShop.findById(id);
+    const sweetShop = await SweetShop.findOne({ _id: id, status: true });
     return sweetShop ? sweetShop : false;
   });
 };
@@ -112,8 +113,11 @@ const searchSweets = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return sweets;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return sweets.length > 0 ? modifyResponse(sweets, "sweets") : false;
   });
 };
 

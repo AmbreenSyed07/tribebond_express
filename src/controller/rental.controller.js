@@ -100,7 +100,6 @@ const editRental = async (req, res) => {
       return sendResponse(res, 404, false, "Rental record not found");
     }
 
-    // Check if the Beauty record's createdBy is equal to the user's id
     if (rentalRecord.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
@@ -167,6 +166,8 @@ const getRentals = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
     const { query } = req.query;
+
+    let rentals;
     if (query) {
       rentals = await searchRentals(query);
     } else {

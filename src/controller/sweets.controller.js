@@ -96,6 +96,20 @@ const editSweetShop = async (req, res) => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
 
+    const sweetRecord = await findSweetShopByIdHelper(rentalId);
+    if (!sweetRecord) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+
+    if (sweetRecord.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(shopId, images, res);
@@ -162,7 +176,14 @@ const editImage = async (sweetShopId, images, res) => {
 const getSweetsShops = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const sweetShops = await findSweetShopsByCity(city);
+    const { query } = req.query;
+
+    let sweetShops;
+    if (query) {
+      sweetShops = await searchSweets(query);
+    } else {
+      sweetShops = await findSweetShopsByCity(city);
+    }
     if (!sweetShops) {
       return sendResponse(res, 400, false, "No sweet shops found.");
     }
@@ -197,9 +218,19 @@ const getSweetShopById = async (req, res) => {
 const deleteSweetShopImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { shopId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
+
     const sweetShop = await findSweetShopByIdHelper(shopId);
     if (!sweetShop) {
       return sendResponse(res, 404, false, "Sweet shop not found");
+    }
+    if (sweetShop.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

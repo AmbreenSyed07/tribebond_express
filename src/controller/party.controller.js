@@ -161,7 +161,16 @@ const editImage = async (partyId, images, res) => {
 const getParties = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const parties = await findPartiesByCity(city);
+
+    const { query } = req.query;
+
+    let parties;
+    if (query) {
+      parties = await searchParties(query);
+    } else {
+      parties = await findPartiesByCity(city);
+    }
+
     if (!parties) {
       return sendResponse(res, 400, false, "No parties found.");
     }
