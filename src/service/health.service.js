@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const HealthRecord = require("../model/health.model");
 
 const createHealthRecord = async (info) => {
@@ -30,7 +30,7 @@ const findAndUpdateHealthRecord = async (findInfo, setInfo) => {
 
 const findHealthRecordById = async (id) => {
   return asyncHandler(async () => {
-    let healthRecord = await HealthRecord.findById({ _id: id })
+    let healthRecord = await HealthRecord.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -119,7 +119,7 @@ const findHealthRecordsByCity = async (city) => {
 
 const findHealthRecordByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const healthRecord = await HealthRecord.findById(id);
+    const healthRecord = await HealthRecord.findOne({ _id: id, status: true });
     return healthRecord ? healthRecord : false;
   });
 };
@@ -131,8 +131,15 @@ const searchHealthRecords = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
-    });
-    return healthRecords;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    if (healthRecords.length > 0) {
+      return modifyResponse(healthRecords, "health");
+    } else {
+      return false;
+    }
   });
 };
 

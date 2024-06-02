@@ -117,6 +117,20 @@ const editHealthRecord = async (req, res) => {
       website,
     } = req.body;
 
+    const health = await findHealthRecordByIdHelper(healthRecordId);
+    if (!health) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+
+    if (health.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(healthRecordId, images, res);
@@ -189,7 +203,17 @@ const editImage = async (healthRecordId, images, res) => {
 const getHealthRecords = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const healthRecords = await findHealthRecordsByCity(city);
+
+   const { query } = req.query;
+
+   let healthRecords;
+   if (query) {
+     healthRecords = await searchHealthRecords(query);
+   } else {
+     healthRecords = await findHealthRecordsByCity(city);
+   }
+
+   
     if (!healthRecords) {
       return sendResponse(res, 400, false, "No health records found.");
     }
@@ -224,9 +248,20 @@ const getHealthRecordById = async (req, res) => {
 const deleteHealthRecordImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { healthRecordId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
+
     const healthRecord = await findHealthRecordByIdHelper(healthRecordId);
     if (!healthRecord) {
       return sendResponse(res, 404, false, "Health record not found");
+    }
+
+    if (healthRecord.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

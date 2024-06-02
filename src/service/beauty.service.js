@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const BeautyRecord = require("../model/beauty.model");
 
 const createBeautyRecord = async (info) => {
@@ -30,7 +30,10 @@ const findAndUpdateBeautyRecord = async (findInfo, setInfo) => {
 
 const findBeautyRecordById = async (id) => {
   return asyncHandler(async () => {
-    let beautyRecord = await BeautyRecord.findById({ _id: id })
+    let beautyRecord = await BeautyRecord.findOne({
+      _id: id,
+      status: true,
+    })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -119,7 +122,7 @@ const findBeautyRecordsByCity = async (city) => {
 
 const findBeautyRecordByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const beautyRecord = await BeautyRecord.findById(id);
+    const beautyRecord = await BeautyRecord.findOne({ _id: id, status: true });
     return beautyRecord ? beautyRecord : false;
   });
 };
@@ -131,8 +134,15 @@ const searchBeautyRecords = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
-    });
-    return beautyRecords;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    if (beautyRecords.length > 0) {
+      return modifyResponse(beautyRecords, "beauty");
+    } else {
+      return false;
+    }
   });
 };
 

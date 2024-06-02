@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Qurbani = require("../model/qurbani.model");
 
 const createQurbani = async (info) => {
@@ -28,7 +28,7 @@ const findAndUpdateQurbani = async (findInfo, setInfo) => {
 
 const findQurbaniById = async (id) => {
   return asyncHandler(async () => {
-    const qurbani = await Qurbani.findById({ _id: id })
+    const qurbani = await Qurbani.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -117,7 +117,7 @@ const findQurbanisByCity = async (city) => {
 
 const findQurbaniByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const qurbani = await Qurbani.findById(id);
+    const qurbani = await Qurbani.findOne({ _id: id, status: true });
     return qurbani ? qurbani : false;
   });
 };
@@ -129,8 +129,15 @@ const searchQurbanis = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return qurbanis;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    if (qurbanis.length > 0) {
+      return modifyResponse(qurbanis, "qurbani");
+    } else {
+      return false;
+    }
   });
 };
 

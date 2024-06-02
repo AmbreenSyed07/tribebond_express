@@ -122,7 +122,6 @@ const editBeautyRecord = async (req, res) => {
       return sendResponse(res, 404, false, "Beauty record not found");
     }
 
-    // Check if the Beauty record's createdBy is equal to the user's id
     if (beautyRecord.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
@@ -207,7 +206,16 @@ const editImage = async (beautyRecordId, images, res) => {
 const getBeautyRecords = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const beautyRecords = await findBeautyRecordsByCity(city);
+
+     const { query } = req.query;
+
+     let beautyRecords;
+     if (query) {
+       beautyRecords = await searchBeautyRecords(query);
+     } else {
+       beautyRecords = await findBeautyRecordsByCity(city);
+     }
+  
     if (!beautyRecords) {
       return sendResponse(res, 400, false, "No beauty records found.");
     }

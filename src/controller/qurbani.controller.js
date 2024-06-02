@@ -175,7 +175,17 @@ const editImage = async (qurbaniId, images, res) => {
 const getQurbanis = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const qurbanis = await findQurbanisByCity(city);
+
+     const { query } = req.query;
+
+     let qurbanis;
+     if (query) {
+       qurbanis = await searchQurbanis(query);
+     } else {
+       qurbanis = await findQurbanisByCity(city);
+     }
+
+  
     if (!qurbanis) {
       return sendResponse(res, 400, false, "No qurbanis found.");
     }
