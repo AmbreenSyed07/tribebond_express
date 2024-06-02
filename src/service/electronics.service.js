@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Electronic = require("../model/electronics.model");
 
 const createElectronic = async (info) => {
@@ -119,7 +119,7 @@ const findElectronicsByCity = async (city) => {
 
 const findElectronicByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const electronic = await Electronic.findById(id);
+    const electronic = await Electronic.findOne({ _id: id, status: true });
     return electronic ? electronic : false;
   });
 };
@@ -131,8 +131,13 @@ const searchElectronics = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
-    });
-    return electronics;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return electronics.length > 0
+      ? modifyResponse(electronics, "electronics")
+      : false;
   });
 };
 

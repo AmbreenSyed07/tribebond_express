@@ -122,6 +122,20 @@ const editElectronic = async (req, res) => {
       website,
     } = req.body;
 
+    const electronics = await findElectronicByIdHelper(electronicId);
+    if (!electronics) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+
+    if (electronics.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(electronicId, images, res);
@@ -190,7 +204,16 @@ const editImage = async (electronicId, images, res) => {
 const getElectronics = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const electronics = await findElectronicsByCity(city);
+
+    const { query } = req.query;
+
+    let electronics;
+    if (query) {
+      electronics = await searchElectronics(query);
+    } else {
+      electronics = await findElectronicsByCity(city);
+    }
+
     if (!electronics) {
       return sendResponse(res, 400, false, "No electronics found.");
     }
@@ -225,9 +248,19 @@ const getElectronicById = async (req, res) => {
 const deleteElectronicImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { electronicId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
+
     const electronic = await findElectronicByIdHelper(electronicId);
     if (!electronic) {
       return sendResponse(res, 404, false, "Electronic item not found");
+    }
+    if (electronic.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

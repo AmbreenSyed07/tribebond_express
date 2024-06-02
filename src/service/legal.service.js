@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Legal = require("../model/legal.model");
 
 const createLegal = async (info) => {
@@ -117,7 +117,7 @@ const findLegalsByCity = async (city) => {
 
 const findLegalByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const legal = await Legal.findById(id);
+    const legal = await Legal.findOne({ _id: id, status: true });
     return legal ? legal : false;
   });
 };
@@ -129,8 +129,11 @@ const searchLegals = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
-    });
-    return legals;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return legals.length > 0 ? modifyResponse(legals, "legal") : false;
   });
 };
 

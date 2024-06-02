@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Doctor = require("../model/doctor.model");
 
 const createDoctor = async (info) => {
@@ -117,7 +117,7 @@ const findDoctorsByCity = async (city) => {
 
 const findDoctorByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const doctor = await Doctor.findById(id);
+    const doctor = await Doctor.findOne({ _id: id, status: true });
     return doctor ? doctor : false;
   });
 };
@@ -129,8 +129,11 @@ const searchDoctors = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
-    });
-    return doctors;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return doctors.length > 0 ? modifyResponse(doctors, "doctor") : false;
   });
 };
 

@@ -172,7 +172,16 @@ const editImage = async (automobileId, images, res) => {
 const getAutomobiles = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const automobiles = await findAutomobilesByCity(city);
+
+const { query } = req.query;
+
+let automobiles;
+if (query) {
+  automobiles = await searchAutomobiles(query);
+} else {
+  automobiles = await findAutomobilesByCity(city);
+}
+
     if (!automobiles) {
       return sendResponse(res, 400, false, "No automobiles found.");
     }

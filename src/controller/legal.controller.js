@@ -197,7 +197,16 @@ const editImage = async (legalId, images, res) => {
 const getLegals = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const legals = await findLegalsByCity(city);
+
+const { query } = req.query;
+
+let legals;
+if (query) {
+  legals = await searchLegals(query);
+} else {
+  legals = await findLegalsByCity(city);
+}
+
     if (!legals) {
       return sendResponse(
         res,

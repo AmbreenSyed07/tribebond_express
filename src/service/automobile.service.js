@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Automobile = require("../model/automobile.model");
 
 const createAutomobile = async (info) => {
@@ -116,7 +116,7 @@ const findAutomobilesByCity = async (city) => {
 
 const findAutomobileByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const automobile = await Automobile.findById(id);
+    const automobile = await Automobile.findOne({ _id: id, status: true });
     return automobile ? automobile : false;
   });
 };
@@ -128,8 +128,13 @@ const searchAutomobiles = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return automobiles;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return automobiles.length > 0
+      ? modifyResponse(automobiles, "automobile")
+      : false;
   });
 };
 

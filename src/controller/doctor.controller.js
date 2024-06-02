@@ -175,7 +175,16 @@ const editImage = async (doctorId, images, res) => {
 const getDoctors = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const doctors = await findDoctorsByCity(city);
+
+      const { query } = req.query;
+
+      let doctors;
+      if (query) {
+        doctors = await searchDoctors(query);
+      } else {
+        doctors = await findDoctorsByCity(city);
+    }
+    
     if (!doctors) {
       return sendResponse(res, 400, false, "No doctors found.");
     }
