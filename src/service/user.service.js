@@ -2,6 +2,7 @@ const { asyncHandler } = require("../helper/async-error.helper");
 const User = require("../model/user.model");
 const mongoose = require("mongoose");
 const OTP = require("../model/otp.model");
+const Feedback = require("../model/feedback.model");
 
 const findUserByEmail = async (email) => {
   return asyncHandler(async () => {
@@ -9,7 +10,6 @@ const findUserByEmail = async (email) => {
     return user ? user.toJSON() : false;
   });
 };
-
 
 const createUser = async (info) => {
   return asyncHandler(async () => {
@@ -38,9 +38,18 @@ const saveOtp = async (info) => {
   });
 };
 
+const saveFeedbackFromUser = async (info) => {
+  return asyncHandler(async () => {
+    const feedback = new Feedback(info);
+    const savedFeedback = await feedback.save();
+    return savedFeedback instanceof Feedback ? savedFeedback.toJSON() : false;
+  });
+};
+
 module.exports = {
   findUserByEmail,
   createUser,
   updateCustomerById,
   saveOtp,
+  saveFeedbackFromUser,
 };

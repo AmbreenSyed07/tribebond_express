@@ -3,16 +3,17 @@
 const smtpConfig = require("../config/smtp.config");
 const nodemailer = require("nodemailer");
 
-const BCC = "ambreen.bano@synques.in";
-const REPLY_TO = "Graces Resorts <ambreen.bano@synques.in>";
-const FROM = "Graces Resorts <noreply@synques.in>";
+const BCC = "ambreensyed4724@gmail.com";
+const REPLY_TO = "Tribebond <ambreensyed4724@gmail.com>";
+const FROM = "Tribebond <noreply@tribebond>";
 
 // SMTP configuration
 
 const smtpConfigOptions = {
-  host: smtpConfig.host, // Replace with the SES SMTP endpoint for your region
-  port: smtpConfig.port,
-  secure: false, // TLS required tls
+  // host: smtpConfig.host, // Replace with the SES SMTP endpoint for your region
+  // port: smtpConfig.port,
+  // secure: false, // TLS required tls
+  service:smtpConfig.service,
   auth: {
     user: smtpConfig.auth.user, // Your SMTP username
     pass: smtpConfig.auth.pass, // Your SMTP password

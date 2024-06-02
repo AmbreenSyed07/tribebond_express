@@ -12,10 +12,16 @@ const {
   createUser,
   updateCustomerById,
   saveOtp,
+  saveFeedbackFromUser,
 } = require("../service/user.service");
 const { createToken } = require("../helper/jwt.helpers");
-const { getLoginOTPVerificationBody } = require("../views/email.views");
+const {
+  getLoginOTPVerificationBody,
+  feedbackReplyToUser,
+  contactToAdminBody,
+} = require("../views/email.views");
 const { generateUniqueOtp } = require("../helper/otp.helpers");
+const { sendEmail } = require("../helper/nodemailer.helper");
 
 const logInUser = async (req, res) => {
   return asyncErrorHandler(async () => {
@@ -208,4 +214,41 @@ const registerUser = async (req, res) => {
 //   }, res);
 // };
 
-module.exports = { registerUser, logInUser };
+const saveFeedback = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { name, email, subject, message } = req.body;
+    const { _id: userId } = req.tokenData;
+
+    const info = { name, email, subject, message, userId };
+    let feedback = await saveFeedbackFromUser(info);
+    if (!feedback) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Unable to send feedback. Please try again later."
+      );
+    } else {
+      // email to user
+      let to = email;
+      let subjectHead = `Tribebond: Thankyou for contacting us!`;
+      let body = feedbackReplyToUser(name);
+      await sendEmail(to, subjectHead, body);
+
+      // email to admin
+      let adminTo = "ambreensyed4724@gmail.com";
+      let adminSubject = "Feedback from user.";
+      let adminBody = contactToAdminBody(name, email, subject, message);
+      await sendEmail(adminTo, adminSubject, adminBody);
+
+      return sendResponse(
+        res,
+        200,
+        true,
+        "Your feedback has been sent successfully."
+      );
+    }
+  }, res);
+};
+
+module.exports = { registerUser, logInUser, saveFeedback };
