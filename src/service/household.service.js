@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Household = require("../model/household.model");
 
 const createHouseholdItem = async (info) => {
@@ -101,7 +101,7 @@ const findHouseholdItemsByCity = async (city) => {
 
 const findHouseholdItemByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const householdItem = await Household.findById(id);
+    const householdItem = await Household.findOne({ _id: id, status: true });
     return householdItem ? householdItem : false;
   });
 };
@@ -113,8 +113,12 @@ const searchHouseholds = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return households.length > 0 ? households : false;
+    })
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return households.length > 0
+      ? modifyResponse(households, "household")
+      : false;
   });
 };
 

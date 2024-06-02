@@ -1,9 +1,6 @@
 /** @format */
 
-const {
-  asyncErrorHandler,
-  asyncHandler,
-} = require("../helper/async-error.helper");
+const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
 const { isNotEmpty } = require("../helper/validate.helpers");
 const {
@@ -125,6 +122,21 @@ const editDiningLocation = async (req, res) => {
       website,
     } = req.body;
 
+    const checkDining = await findDiningLocationByIdHelper(locationId);
+    if (!checkDining) {
+      return sendResponse(res, 404, false, "Dining location not found");
+    }
+
+    // Check if the checkDining's createdBy is equal to the user's id
+    if (checkDining.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(locationId, images, res);
@@ -198,7 +210,15 @@ const editImage = async (locationId, images, res) => {
 const getDiningLocations = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const diningLocations = await findDiningLocationsByCity(city);
+    const { query } = req.query;
+
+    let diningLocations;
+    if (query) {
+      diningLocations = await searchFoodCaterings(query);
+    } else {
+      diningLocations = await findDiningLocationsByCity(city);
+    }
+
     if (!diningLocations) {
       return sendResponse(res, 400, false, "No dining locations found.");
     }
@@ -233,9 +253,18 @@ const getDiningLocationById = async (req, res) => {
 const deleteDiningLocationImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { locationId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
     const diningLocation = await findDiningLocationByIdHelper(locationId);
     if (!diningLocation) {
       return sendResponse(res, 404, false, "Dining location not found");
+    }
+    if (diningLocation.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

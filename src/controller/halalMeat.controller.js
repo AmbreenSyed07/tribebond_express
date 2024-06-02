@@ -1,6 +1,5 @@
 const {
   asyncErrorHandler,
-  asyncHandler,
 } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
 const { isNotEmpty } = require("../helper/validate.helpers");
@@ -9,7 +8,6 @@ const {
   findAndUpdateMeat,
   findMeatByIdHelper,
   findMeatById,
-  findRestaurantsByCity,
   findMeatsByCity,
   searchHalalMeats,
 } = require("../service/halalMeat.service");
@@ -182,7 +180,15 @@ const editImage = async (meatId, images, res) => {
 const getMeats = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const meats = await findMeatsByCity(city);
+    const { query } = req.query;
+
+
+     let meats;
+     if (query) {
+       meats = await searchHalalMeats(query);
+     } else {
+       meats = await findMeatsByCity(city);
+     }
     if (!meats) {
       return sendResponse(res, 400, false, "No meats found.");
     }

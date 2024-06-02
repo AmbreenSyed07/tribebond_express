@@ -180,7 +180,15 @@ const editImage = async (householdId, images, res) => {
 const getHouseholdItems = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const householdItems = await findHouseholdItemsByCity(city);
+    const { query } = req.query;
+
+    let householdItems;
+    if (query) {
+      householdItems = await searchHouseholds(query);
+    } else {
+      householdItems = await findHouseholdItemsByCity(city);
+    }
+
     if (!householdItems) {
       return sendResponse(res, 400, false, "No household items found.");
     }

@@ -1,5 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Grocery = require("../model/grocery.model");
 
 const createGrocery = async (info) => {
@@ -97,11 +97,10 @@ const findGroceriesByCity = async (city) => {
 
 const findGroceryByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const grocery = await Grocery.findById(id);
+    const grocery = await Grocery.findOne({ _id: id, status: true });
     return grocery ? grocery : false;
   });
 };
-
 
 const searchGroceries = async (query) => {
   return asyncHandler(async () => {
@@ -110,8 +109,10 @@ const searchGroceries = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return groceries;
+    })
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return groceries.length > 0 ? modifyResponse(groceries, "grocery") : false;
   });
 };
 

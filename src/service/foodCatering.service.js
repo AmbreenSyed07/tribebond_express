@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const FoodCatering = require("../model/foodCatering.model");
 
 const createDiningLocation = async (info) => {
@@ -119,7 +119,10 @@ const findDiningLocationsByCity = async (city) => {
 
 const findDiningLocationByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const diningLocation = await FoodCatering.findById(id);
+    const diningLocation = await FoodCatering.findOne({
+      _id: id,
+      status: true,
+    });
     return diningLocation ? diningLocation : false;
   });
 };
@@ -131,8 +134,12 @@ const searchFoodCaterings = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return foodCaterings;
+    })
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return foodCaterings.length > 0
+      ? modifyResponse(foodCaterings, "food-catering")
+      : false;
   });
 };
 

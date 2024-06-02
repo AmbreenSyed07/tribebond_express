@@ -17,8 +17,6 @@ const {
   deleteImageFromStorage,
   uploadAndCreateImage,
 } = require("../helper/upload.helpers");
-const Event = require("../model/events.model");
-const HalalRestaurant = require("../model/halalRestaurant.model");
 
 const addRestaurant = async (req, res) => {
   return asyncErrorHandler(async () => {
@@ -199,7 +197,17 @@ const editImage = async (restroId, images, res) => {
 const getRestaurants = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const restaurants = await findRestaurantsByCity(city);
+    const { query } = req.query;
+
+    let restaurants;
+    if (query) {
+      // If query parameter is present, use the search service
+      restaurants = await searchHalalRestaurants(query);
+    } else {
+      // Otherwise, use the findrestaurantsByCity service
+      restaurants = await findRestaurantsByCity(city);
+    }
+
     if (!restaurants) {
       return sendResponse(res, 400, false, "No restaurants found.");
     }

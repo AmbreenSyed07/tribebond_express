@@ -1,5 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const HalalRestaurant = require("../model/halalRestaurant.model");
 
 const createRestaurant = async (info) => {
@@ -100,7 +100,7 @@ const findRestaurantsByCity = async (city) => {
 
 const findRestaurantByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const restaurant = await HalalRestaurant.findById(id);
+    const restaurant = await HalalRestaurant.findOne({ _id: id, status: true });
     return restaurant ? restaurant : false;
   });
 };
@@ -112,8 +112,12 @@ const searchHalalRestaurants = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return halalRestaurants;
+    })
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return halalRestaurants.length > 0
+      ? modifyResponse(halalRestaurants, "restaurant")
+      : false;
   });
 };
 

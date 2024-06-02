@@ -177,7 +177,15 @@ const editImage = async (groceryId, images, res) => {
 const getGroceries = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const groceries = await findGroceriesByCity(city);
+    const { query } = req.query;
+
+    let groceries;
+    if (query) {
+      groceries = await searchGroceries(query);
+    } else {
+      groceries = await findGroceriesByCity(city);
+    }
+
     if (!groceries) {
       return sendResponse(res, 400, false, "No groceries found.");
     }
