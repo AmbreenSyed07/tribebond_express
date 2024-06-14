@@ -3,10 +3,14 @@ const User = require("../model/user.model");
 const mongoose = require("mongoose");
 const OTP = require("../model/otp.model");
 const Feedback = require("../model/feedback.model");
+const { base_url } = require("../helper/local.helpers");
 
 const findUserByEmail = async (email) => {
   return asyncHandler(async () => {
     const user = await User.findOne({ email: email }).exec();
+    if (user && user.profilePicture) {
+      user.profilePicture = `${base_url}public/data/profile/${user._id}/${user.profilePicture}`;
+    }
     return user ? user.toJSON() : false;
   });
 };
