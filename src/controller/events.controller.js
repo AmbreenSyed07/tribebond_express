@@ -1,7 +1,4 @@
-const {
-  asyncErrorHandler,
-  asyncHandler,
-} = require("../helper/async-error.helper");
+const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
 const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {

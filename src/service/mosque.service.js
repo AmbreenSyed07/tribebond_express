@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Mosque = require("../model/mosque.model");
 
 const createMosqueRecord = async (info) => {
@@ -30,33 +30,11 @@ const findAndUpdateMosqueRecord = async (findInfo, setInfo) => {
 
 const findMosqueRecordById = async (id) => {
   return asyncHandler(async () => {
-    const mosqueRecord = await Mosque.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
-    if (mosqueRecord) {
-      let mosqueRecordObj = mosqueRecord.toObject();
-      mosqueRecordObj?.reviews &&
-        mosqueRecordObj?.reviews.length > 0 &&
-        mosqueRecordObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (mosqueRecordObj.images && mosqueRecordObj.images.length > 0) {
-        mosqueRecordObj.images = mosqueRecordObj.images.map((img) => {
-          return `${base_url}public/data/mosque/${mosqueRecordObj._id}/${img}`;
-        });
-      }
-      return mosqueRecordObj;
-    } else {
-      return false;
-    }
+    const mosqueRecord = await Mosque.findById({ _id: id })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return mosqueRecord ? modifyResponse([mosqueRecord], "mosque") : false;
   });
 };
 
@@ -68,34 +46,12 @@ const findMosqueRecordsByCity = async (city) => {
     })
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
       .exec();
-    if (mosqueRecords.length > 0) {
-      const modifiedMosqueRecords = mosqueRecords.map((mosqueRecord) => {
-        let mosqueRecordObj = mosqueRecord.toObject();
 
-        mosqueRecordObj?.reviews &&
-          mosqueRecordObj?.reviews.length > 0 &&
-          mosqueRecordObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (mosqueRecordObj.images && mosqueRecordObj.images.length > 0) {
-          mosqueRecordObj.images = mosqueRecordObj.images.map((img) => {
-            return `${base_url}public/data/mosque/${mosqueRecordObj._id}/${img}`;
-          });
-        }
-        return mosqueRecordObj;
-      });
-      return modifiedMosqueRecords;
-    } else {
-      return false;
-    }
+    return mosqueRecords.length > 0
+      ? modifyResponse(mosqueRecords, "mosque")
+      : false;
   });
 };
 

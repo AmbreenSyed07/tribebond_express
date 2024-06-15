@@ -2,7 +2,7 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createMosqueRecord,
   findAndUpdateMosqueRecord,
@@ -30,11 +30,45 @@ const addMosqueRecord = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website.");
+    } else if (khutbah) {
+      if (typeof khutbah === "string") {
+        try {
+          let khutbahArray = JSON.parse(khutbah);
+          if (!Array.isArray(khutbahArray) || khutbahArray.length <= 0) {
+            return sendResponse(
+              res,
+              400,
+              false,
+              "Please enter khutbah timings."
+            );
+          }
+        } catch (error) {
+          return sendResponse(res, 400, false, "Invalid khutbah format.");
+        }
+      } else if (Array.isArray(khutbah) && khutbah.length <= 0) {
+        return sendResponse(res, 400, false, "Please enter khutbah timings.");
+      } else {
+        return sendResponse(res, 400, false, "Please enter khutbah timings.");
+      }
+    } else {
+      return sendResponse(res, 400, false, "Please enter khutbah timings.");
     }
+    if (!mosque_images || mosque_images.length === 0) {
+      return sendResponse(res, 400, false, "Please select images.");
+    }
+
     const khutbahArray =
       typeof khutbah == "string" ? JSON.parse(khutbah) : khutbah;
+
     const info = {
       name,
       description,
@@ -114,12 +148,52 @@ const editMosqueRecord = async (req, res) => {
       );
     }
 
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website.");
+    } else if (khutbah) {
+      if (typeof khutbah === "string") {
+        try {
+          let khutbahArray = JSON.parse(khutbah);
+          if (!Array.isArray(khutbahArray) || khutbahArray.length <= 0) {
+            return sendResponse(
+              res,
+              400,
+              false,
+              "Please enter khutbah timings."
+            );
+          }
+        } catch (error) {
+          return sendResponse(res, 400, false, "Invalid khutbah format.");
+        }
+      } else if (Array.isArray(khutbah) && khutbah.length <= 0) {
+        return sendResponse(res, 400, false, "Please enter khutbah timings.");
+      } else {
+        return sendResponse(res, 400, false, "Please enter khutbah timings.");
+      }
+    } else {
+      return sendResponse(res, 400, false, "Please enter khutbah timings.");
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(mosqueRecordId, images, res);
     }
     const khutbahArray =
       typeof khutbah == "string" ? JSON.parse(khutbah) : khutbah;
+
     const findInfo = { _id: mosqueRecordId, status: true };
     const setInfo = {
       name,
@@ -235,7 +309,7 @@ const deleteMosqueRecordImages = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to delete images of this mosque record."
+        "You are not authorized to delete images of this record."
       );
     }
 
