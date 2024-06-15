@@ -1,5 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const Event = require("../model/events.model");
 
 const createEvent = async (info) => {
@@ -26,33 +26,33 @@ const findAndUpdateEvent = async (findInfo, setInfo) => {
 
 const findEventById = async (id) => {
   return asyncHandler(async () => {
-    const event = await Event.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
-    if (event) {
-      let eventObj = event.toObject();
-      eventObj?.reviews &&
-        eventObj?.reviews.length > 0 &&
-        eventObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
+    const event = await Event.findById({ _id: id })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture");
+    // if (event) {
+    //   let eventObj = event.toObject();
+    //   eventObj?.reviews &&
+    //     eventObj?.reviews.length > 0 &&
+    //     eventObj?.reviews.forEach((review) => {
+    //       if (
+    //         review.user &&
+    //         review.user.profilePicture &&
+    //         !review.user.profilePicture.startsWith(base_url)
+    //       ) {
+    //         review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
+    //       }
+    //     });
 
-      if (eventObj.images && eventObj.images.length > 0) {
-        eventObj.images = eventObj.images.map((img) => {
-          return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
-        });
-      }
-      return eventObj;
-    } else {
-      return false;
-    }
+    //   if (eventObj.images && eventObj.images.length > 0) {
+    //     eventObj.images = eventObj.images.map((img) => {
+    //       return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
+    //     });
+    //   }
+    //   return eventObj;
+    // } else {
+    //   return false;
+    // }
+    return event ? modifyResponse([event], "event-image") : false;
   });
 };
 
@@ -64,35 +64,36 @@ const findEventByCity = async (city) => {
     })
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
       .exec();
-    // return events.length > 0 ? events : false;
-    if (events.length > 0) {
-      const modifiedEvents = events.map((event) => {
-        let eventObj = event.toObject();
+    return events.length > 0 ? modifyResponse(events, "event-image") : false;
+    // if (events.length > 0) {
+    //   const modifiedEvents = events.map((event) => {
+    //     let eventObj = event.toObject();
 
-        eventObj?.reviews &&
-          eventObj?.reviews.length > 0 &&
-          eventObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
+    //     eventObj?.reviews &&
+    //       eventObj?.reviews.length > 0 &&
+    //       eventObj?.reviews.forEach((review) => {
+    //         if (
+    //           review.user &&
+    //           review.user.profilePicture &&
+    //           !review.user.profilePicture.startsWith(base_url)
+    //         ) {
+    //           review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
+    //         }
+    //       });
 
-        if (eventObj.images && eventObj.images.length > 0) {
-          eventObj.images = eventObj.images.map((img) => {
-            return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
-          });
-        }
-        return eventObj;
-      });
-      return modifiedEvents;
-    } else {
-      return false;
-    }
+    //     if (eventObj.images && eventObj.images.length > 0) {
+    //       eventObj.images = eventObj.images.map((img) => {
+    //         return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
+    //       });
+    //     }
+    //     return eventObj;
+    //   });
+    //   return modifiedEvents;
+    // } else {
+    //   return false;
+    // }
   });
 };
 

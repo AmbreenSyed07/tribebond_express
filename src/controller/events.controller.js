@@ -3,7 +3,7 @@ const {
   asyncHandler,
 } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createEvent,
   findAndUpdateEvent,
@@ -60,7 +60,29 @@ const addEvent = async (req, res) => {
         false,
         "Please enter a city for the event."
       );
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid phone number for the event."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid website for the event."
+      );
+    } else if (!event_images) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please select images for the event."
+      );
     }
+
     const info = {
       name,
       description,
@@ -143,6 +165,71 @@ const editEvent = async (req, res) => {
     const { name, description, date, time, address, city, phone, website } =
       req.body;
 
+    const checkEvent = await findEventByIdHelper(id);
+    if (!checkEvent) {
+      return sendResponse(res, 404, false, "Event not found");
+    }
+
+    if (checkEvent.createdBy.toString() !== _id.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a name for the event."
+      );
+    } else if (!isNotEmpty(date)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a date for the event."
+      );
+    } else if (!isNotEmpty(time)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a time for the event."
+      );
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter an address for the event."
+      );
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a city for the event."
+      );
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid phone number for the event."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid website for the event."
+      );
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(id, images, res);
@@ -220,7 +307,20 @@ const deleteEvent = async (req, res) => {
     const { id } = req.params;
 
     const { _id } = req.tokenData;
-    // updatedBy
+
+    const checkEvent = await findEventByIdHelper(id);
+    if (!checkEvent) {
+      return sendResponse(res, 404, false, "Event not found");
+    }
+
+    if (checkEvent.createdBy.toString() !== _id.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
 
     const findInfo = { _id: id };
     const setInfo = { status: 0, updatedBy: _id };
@@ -237,9 +337,19 @@ const deleteEvent = async (req, res) => {
 const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { eventId, imageUrls } = req.body;
+    const { _id } = req.tokenData;
     const event = await Event.findById(eventId);
     if (!event) {
       return sendResponse(res, 404, false, "Event not found");
+    }
+
+    if (event.createdBy.toString() !== _id.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete images for this record."
+      );
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
