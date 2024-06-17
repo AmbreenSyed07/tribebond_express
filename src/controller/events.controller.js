@@ -14,7 +14,7 @@ const {
   deleteImageFromStorage,
 } = require("../helper/upload.helpers");
 const Event = require("../model/events.model");
-
+ 
 const addEvent = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;

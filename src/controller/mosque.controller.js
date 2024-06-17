@@ -56,8 +56,6 @@ const addMosqueRecord = async (req, res) => {
         }
       } else if (Array.isArray(khutbah) && khutbah.length <= 0) {
         return sendResponse(res, 400, false, "Please enter khutbah timings.");
-      } else {
-        return sendResponse(res, 400, false, "Please enter khutbah timings.");
       }
     } else {
       return sendResponse(res, 400, false, "Please enter khutbah timings.");

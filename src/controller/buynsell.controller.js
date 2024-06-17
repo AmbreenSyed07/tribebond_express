@@ -22,6 +22,7 @@ const addBuyNSell = async (req, res) => {
     const {
       name,
       description,
+      city,
       location,
       price,
       category,
@@ -31,7 +32,9 @@ const addBuyNSell = async (req, res) => {
     let buyNSellImages = req && req.files && req.files.images;
 
     if (!isNotEmpty(name)) {
-      return sendResponse(res, 400, false, "Please enter the name.");
+      return sendResponse(res, 400, false, "Please enter a name.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
     } else if (!isNotEmpty(location)) {
       return sendResponse(res, 400, false, "Please enter the location.");
     } else if (!isNotEmpty(price)) {
@@ -42,11 +45,19 @@ const addBuyNSell = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter a contact number.");
     } else if (!isNotEmpty(contactEmail)) {
       return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!buyNSellImages || buyNSellImages.length <= 0) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please select images for the record."
+      );
     }
 
     const info = {
       name,
       description,
+      city,
       location,
       price,
       category,
@@ -108,6 +119,7 @@ const editBuyNSell = async (req, res) => {
     const { _id: userId } = req.tokenData;
     const {
       name,
+      city,
       description,
       location,
       price,
@@ -131,6 +143,22 @@ const editBuyNSell = async (req, res) => {
       );
     }
 
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter a name.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(location)) {
+      return sendResponse(res, 400, false, "Please enter the location.");
+    } else if (!isNotEmpty(price)) {
+      return sendResponse(res, 400, false, "Please enter the price.");
+    } else if (!isNotEmpty(category)) {
+      return sendResponse(res, 400, false, "Please enter the category.");
+    } else if (!isNotEmpty(phone)) {
+      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(contactEmail)) {
+      return sendResponse(res, 400, false, "Please enter your email.");
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(buynsellId, images, res);
@@ -140,6 +168,7 @@ const editBuyNSell = async (req, res) => {
     const setInfo = {
       name,
       description,
+      city,
       location,
       price,
       category,
@@ -280,6 +309,47 @@ const addBuyNSellReview = async (req, res) => {
   }, res);
 };
 
+const deleteBuyNSell = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const buyNSell = await findBuyNSellByIdHelper({
+      _id: id,
+      status: true,
+    });
+    if (!buyNSell) {
+      return sendResponse(res, 404, false, "Item not found");
+    }
+    if (buyNSell.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deleteItem = await findAndUpdateBuyNSell(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deleteItem) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addBuyNSell,
   editBuyNSell,
@@ -287,4 +357,5 @@ module.exports = {
   getBuyNSellById,
   deleteBuyNSellImages,
   addBuyNSellReview,
+  deleteBuyNSell,
 };

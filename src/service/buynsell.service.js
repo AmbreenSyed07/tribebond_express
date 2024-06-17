@@ -25,7 +25,7 @@ const findAndUpdateBuyNSell = async (findInfo, setInfo) => {
 
 const findBuyNSellById = async (id) => {
   return asyncHandler(async () => {
-    let buyNSellRecord = await BuyNSell.findById({ _id: id })
+    let buyNSellRecord = await BuyNSell.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -66,7 +66,7 @@ const findBuyNSellById = async (id) => {
 
 const findBuyNSellByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const buyNSellRecord = await BuyNSell.findById(id);
+    const buyNSellRecord = await BuyNSell.findOne({ _id: id, status: true });
     return buyNSellRecord ? buyNSellRecord : false;
   });
 };
@@ -125,7 +125,7 @@ const searchBuyNSellRecords = async (query) => {
     const buyNSellRecords = await BuyNSell.find({
       $or: [
         { name: { $regex: query, $options: "i" } },
-        { location: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
       ],
       status: true,
     }).exec();

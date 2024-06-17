@@ -12,6 +12,10 @@ const buyNSell = new mongoose.Schema(
       type: String,
       required: false,
     },
+    city: {
+      type: String,
+      required: true,
+    },
     location: {
       type: String,
       required: true,
