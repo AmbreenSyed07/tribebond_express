@@ -121,7 +121,7 @@ const findHelpRequestsByCity = async (city) => {
 
 const findHelpRequestByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const helpRequest = await HelpRequest.findById(id);
+    const helpRequest = await HelpRequest.findOne({ _id: id, status: true });
     return helpRequest ? helpRequest : false;
   });
 };
@@ -132,7 +132,9 @@ const searchHelpRequests = async (query) => {
       $or: [
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
+        { category: { $regex: query, $options: "i" } },
       ],
+      status: true,
     });
     return helpRequests.length > 0 ? helpRequests : false;
   });

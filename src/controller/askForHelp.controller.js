@@ -2,7 +2,7 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createHelpRequest,
   findAndUpdateHelpRequest,
@@ -30,11 +30,21 @@ const addHelpRequest = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(contactEmail)) {
+      return sendResponse(res, 400, false, "Please enter your email.");
     } else if (!isNotEmpty(category)) {
       return sendResponse(res, 400, false, "Please select a category.");
+    } else if (!helpRequest_images || helpRequest_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -110,8 +120,27 @@ const editHelpRequest = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this help request."
+        "You are not authorized to edit this record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(contactEmail)) {
+      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(category)) {
+      return sendResponse(res, 400, false, "Please select a category.");
     }
 
     if (req.files) {
@@ -186,7 +215,14 @@ const editImage = async (helpRequestId, images, res) => {
 const getHelpRequests = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const helpRequests = await findHelpRequestsByCity(city);
+    const { query } = req.query;
+
+    let helpRequests;
+    if (query) {
+      helpRequests = await searchHelpRequests(query);
+    } else {
+      helpRequests = await findHelpRequestsByCity(city);
+    }
     if (!helpRequests) {
       return sendResponse(res, 400, false, "No help requests found.");
     }
@@ -231,7 +267,7 @@ const deleteImages = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this help request."
+        "You are not authorized to edit this record."
       );
     }
 
@@ -293,7 +329,7 @@ const deleteHelpRequest = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to delete this help request."
+        "You are not authorized to delete this record."
       );
     }
 
