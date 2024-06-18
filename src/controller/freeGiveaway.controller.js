@@ -2,7 +2,7 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createGiveawayItem,
   findAndUpdateGiveawayItem,
@@ -30,11 +30,21 @@ const addGiveawayItem = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(contactEmail)) {
+      return sendResponse(res, 400, false, "Please enter your email.");
     } else if (!isNotEmpty(category)) {
       return sendResponse(res, 400, false, "Please select a category.");
+    } else if (!giveaway_images || giveaway_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -110,8 +120,27 @@ const editGiveawayItem = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this giveaway item."
+        "You are not authorized to edit this record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(contactEmail)) {
+      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(category)) {
+      return sendResponse(res, 400, false, "Please select a category.");
     }
 
     if (req.files) {
@@ -186,7 +215,14 @@ const editImage = async (giveawayId, images, res) => {
 const getGiveawayItems = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const giveawayItems = await findGiveawayItemsByCity(city);
+    const { query } = req.query;
+
+    let giveawayItems;
+    if (query) {
+      giveawayItems = await searchGiveaways(query);
+    } else {
+      giveawayItems = await findGiveawayItemsByCity(city);
+    }
     if (!giveawayItems) {
       return sendResponse(res, 400, false, "No giveaway items found.");
     }
@@ -231,7 +267,7 @@ const deleteImages = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this giveaway item."
+        "You are not authorized to edit this record."
       );
     }
 
@@ -293,7 +329,7 @@ const deleteGiveaway = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to delete this giveaway."
+        "You are not authorized to delete this record."
       );
     }
 
@@ -309,11 +345,11 @@ const deleteGiveaway = async (req, res) => {
         res,
         403,
         false,
-        "Some error occured, Please try again later."
+        "Some error occured, please try again later."
       );
     }
 
-    return sendResponse(res, 200, true, "Successfully deleted job.");
+    return sendResponse(res, 200, true, "Successfully deleted record.");
   }, res);
 };
 

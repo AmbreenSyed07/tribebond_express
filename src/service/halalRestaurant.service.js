@@ -112,6 +112,7 @@ const searchHalalRestaurants = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();

@@ -30,9 +30,7 @@ const findAndUpdateGiveawayItem = async (findInfo, setInfo) => {
 
 const findGiveawayItemById = async (id) => {
   return asyncHandler(async () => {
-    const giveawayItem = await Giveaway.findById({
-      _id: id,
-    })
+    const giveawayItem = await Giveaway.findOne({ _id: id, status: true })
       .populate("createdBy", "firstName lastName profilePicture")
       .populate("reviews.user", "firstName lastName profilePicture");
     if (giveawayItem) {
@@ -120,7 +118,7 @@ const findGiveawayItemsByCity = async (city) => {
 
 const findGiveawayItemByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const giveawayItem = await Giveaway.findById(id);
+    const giveawayItem = await Giveaway.findOne({ _id: id, status: true });
     return giveawayItem ? giveawayItem : false;
   });
 };
@@ -131,7 +129,9 @@ const searchGiveaways = async (query) => {
       $or: [
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
+        { category: { $regex: query, $options: "i" } },
       ],
+      status: true,
     });
     return giveaways.length > 0 ? giveaways : false;
   });
