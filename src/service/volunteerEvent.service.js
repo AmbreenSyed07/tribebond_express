@@ -121,7 +121,10 @@ const findVolunteerEventsByCity = async (city) => {
 
 const findVolunteerEventByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const volunteerEvent = await VolunteerEvent.findById(id);
+    const volunteerEvent = await VolunteerEvent.findOne({
+      _id: id,
+      status: true,
+    });
     return volunteerEvent ? volunteerEvent : false;
   });
 };
@@ -133,6 +136,7 @@ const searchVolunteerEvents = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
+      status: true,
     });
     return volunteerEvents.length > 0 ? volunteerEvents : false;
   });

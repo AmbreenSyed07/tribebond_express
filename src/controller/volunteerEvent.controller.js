@@ -2,7 +2,7 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createVolunteerEvent,
   findAndUpdateVolunteerEvent,
@@ -34,9 +34,19 @@ const addVolunteerEvent = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!volunteer_images || volunteer_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -120,8 +130,29 @@ const editVolunteerEvent = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this volunteer event."
+        "You are not authorized to edit this record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(date)) {
+      return sendResponse(res, 400, false, "Please enter the date.");
+    } else if (!isNotEmpty(time)) {
+      return sendResponse(res, 400, false, "Please enter the time.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -197,7 +228,14 @@ const editImage = async (volunteerEventId, images, res) => {
 const getVolunteerEvents = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
-    const volunteerEvents = await findVolunteerEventsByCity(city);
+    const { query } = req.query;
+
+    let volunteerEvents;
+    if (query) {
+      volunteerEvents = await searchVolunteerEvents(query);
+    } else {
+      volunteerEvents = await findVolunteerEventsByCity(city);
+    }
     if (!volunteerEvents) {
       return sendResponse(res, 400, false, "No volunteer events found.");
     }
@@ -242,7 +280,7 @@ const deleteImages = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this volunteer event."
+        "You are not authorized to edit this record."
       );
     }
 
@@ -304,7 +342,7 @@ const deleteVolunteerEvent = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to delete this volunteer event."
+        "You are not authorized to delete this record."
       );
     }
 
