@@ -1,6 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
+const { modifyResponse } = require("../helper/local.helpers");
 const Job = require("../model/jobs.model");
 
 const createJob = async (jobData) => {
@@ -11,17 +12,21 @@ const createJob = async (jobData) => {
   });
 };
 
-const getJobsByLocation = async (location) => {
+const getJobsByLocation = async (city) => {
   return asyncHandler(async () => {
-    const jobs = await Job.find({ location, status: true });
-    return jobs.length > 0 ? jobs : false;
+    const jobs = await Job.find({ city, status: true })
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return jobs.length > 0 ? modifyResponse(jobs) : false;
   });
 };
 
 const findJobById = async (info) => {
   return asyncHandler(async () => {
-    const job = await Job.findOne(info).exec();
-    return job ? job : false;
+    const job = await Job.findOne(info)
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
+    return job ? modifyResponse([job]) : false;
   });
 };
 
@@ -30,11 +35,11 @@ const searchJobs = async (query) => {
     const jobs = await Job.find({
       $or: [
         { jobTitle: { $regex: query, $options: "i" } },
-        { location: { $regex: query, $options: "i" } },
+        { city: { $regex: query, $options: "i" } },
       ],
       status: true,
     });
-    return jobs;
+    return jobs ? modifyResponse(jobs) : false;
   });
 };
 

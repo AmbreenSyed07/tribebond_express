@@ -2,6 +2,7 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
+const { isNotEmpty } = require("../helper/validate.helpers");
 const {
   createJob,
   getJobsByLocation,
@@ -12,13 +13,29 @@ const {
 
 const addJob = async (req, res) => {
   return asyncErrorHandler(async () => {
-    const { jobTitle, jobDetails, location, contactEmail } = req.body;
+    const { jobTitle, jobDetails, location, city, contactEmail } = req.body;
     const { _id: userId } = req.tokenData;
+
+    if (!isNotEmpty(jobTitle)) {
+      return sendResponse(res, 400, false, "Please enter a job title.");
+    } else if (!isNotEmpty(jobDetails)) {
+      return sendResponse(res, 400, false, "Please enter job details.");
+    }
+    if (!isNotEmpty(location)) {
+      return sendResponse(res, 400, false, "Please enter a job location.");
+    }
+    if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter city.");
+    }
+    if (!isNotEmpty(contactEmail)) {
+      return sendResponse(res, 400, false, "Please enter a contact email.");
+    }
 
     const newJob = await createJob({
       jobTitle,
       jobDetails,
       location,
+      city,
       contactEmail,
       createdBy: userId,
     });
@@ -34,10 +51,16 @@ const addJob = async (req, res) => {
 const getJobByLocation = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
+    const { query } = req.query;
 
-    const jobs = await getJobsByLocation(city);
+    let jobs;
+    if (query) {
+      jobs = await searchJobs(query);
+    } else {
+      jobs = await getJobsByLocation(city);
+    }
     if (!jobs || jobs.length === 0) {
-      return sendResponse(res, 404, false, "No jobs found in this location.");
+      return sendResponse(res, 404, false, "No jobs found in your location.");
     }
 
     return sendResponse(res, 200, true, "Successfully fetched jobs.", jobs);
@@ -57,23 +80,6 @@ const getJobById = async (req, res) => {
   }, res);
 };
 
-const searchJob = async (req, res) => {
-  return asyncErrorHandler(async () => {
-    const { query } = req.body;
-
-    if (!query) {
-      return sendResponse(res, 400, false, "Query parameter is required.");
-    }
-
-    const jobs = await searchJobs(query);
-    if (!jobs || jobs.length === 0) {
-      return sendResponse(res, 404, false, "No jobs found.");
-    }
-
-    return sendResponse(res, 200, true, "Successfully fetched jobs.", jobs);
-  }, res);
-};
-
 const deleteJob = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { id } = req.params;
@@ -83,7 +89,7 @@ const deleteJob = async (req, res) => {
     if (!jobRecord) {
       return sendResponse(res, 404, false, "Job not found");
     }
-    if (jobRecord.createdBy.toString() !== userId.toString()) {
+    if (jobRecord[0].createdBy._id.toString() !== userId.toString()) {
       return sendResponse(
         res,
         403,
@@ -110,6 +116,5 @@ module.exports = {
   addJob,
   getJobByLocation,
   getJobById,
-  searchJob,
   deleteJob,
 };
