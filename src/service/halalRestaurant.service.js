@@ -28,33 +28,36 @@ const findAndUpdateRestaurant = async (findInfo, setInfo) => {
 
 const findRestaurantById = async (id) => {
   return asyncHandler(async () => {
-    const restaurant = await HalalRestaurant.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
-    if (restaurant) {
-      let restaurantObj = restaurant.toObject();
-      restaurantObj?.reviews &&
-        restaurantObj?.reviews.length > 0 &&
-        restaurantObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
+    const restaurant = await HalalRestaurant.findById({
+      _id: id,
+      status: true,
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture");
+    // if (restaurant) {
+    //   let restaurantObj = restaurant.toObject();
+    //   restaurantObj?.reviews &&
+    //     restaurantObj?.reviews.length > 0 &&
+    //     restaurantObj?.reviews.forEach((review) => {
+    //       if (
+    //         review.user &&
+    //         review.user.profilePicture &&
+    //         !review.user.profilePicture.startsWith(base_url)
+    //       ) {
+    //         review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
+    //       }
+    //     });
 
-      if (restaurantObj.images && restaurantObj.images.length > 0) {
-        restaurantObj.images = restaurantObj.images.map((img) => {
-          return `${base_url}public/data/restaurant/${restaurantObj._id}/${img}`;
-        });
-      }
-      return restaurantObj;
-    } else {
-      return false;
-    }
+    //   if (restaurantObj.images && restaurantObj.images.length > 0) {
+    //     restaurantObj.images = restaurantObj.images.map((img) => {
+    //       return `${base_url}public/data/restaurant/${restaurantObj._id}/${img}`;
+    //     });
+    //   }
+    //   return restaurantObj;
+    // } else {
+    //   return false;
+    // }
+    return restaurant ? modifyResponse([restaurant], "restaurant") : false;
   });
 };
 
@@ -66,35 +69,38 @@ const findRestaurantsByCity = async (city) => {
     })
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
       .exec();
-    // return restaurants.length > 0 ? restaurants : false;
-    if (restaurants.length > 0) {
-      const modifiedRestaurants = restaurants.map((restaurant) => {
-        let restaurantObj = restaurant.toObject();
+    return restaurants.length > 0
+      ? modifyResponse(restaurants, "restaurant")
+      : false;
+    // if (restaurants.length > 0) {
+    //   const modifiedRestaurants = restaurants.map((restaurant) => {
+    //     let restaurantObj = restaurant.toObject();
 
-        restaurantObj?.reviews &&
-          restaurantObj?.reviews.length > 0 &&
-          restaurantObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
+    //     restaurantObj?.reviews &&
+    //       restaurantObj?.reviews.length > 0 &&
+    //       restaurantObj?.reviews.forEach((review) => {
+    //         if (
+    //           review.user &&
+    //           review.user.profilePicture &&
+    //           !review.user.profilePicture.startsWith(base_url)
+    //         ) {
+    //           review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
+    //         }
+    //       });
 
-        if (restaurantObj.images && restaurantObj.images.length > 0) {
-          restaurantObj.images = restaurantObj.images.map((img) => {
-            return `${base_url}public/data/restaurant/${restaurantObj._id}/${img}`;
-          });
-        }
-        return restaurantObj;
-      });
-      return modifiedRestaurants;
-    } else {
-      return false;
-    }
+    //     if (restaurantObj.images && restaurantObj.images.length > 0) {
+    //       restaurantObj.images = restaurantObj.images.map((img) => {
+    //         return `${base_url}public/data/restaurant/${restaurantObj._id}/${img}`;
+    //       });
+    //     }
+    //     return restaurantObj;
+    //   });
+    //   return modifiedRestaurants;
+    // } else {
+    //   return false;
+    // }
   });
 };
 
@@ -114,6 +120,7 @@ const searchHalalRestaurants = async (query) => {
       ],
       status: true,
     })
+      .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     return halalRestaurants.length > 0

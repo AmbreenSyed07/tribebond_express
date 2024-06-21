@@ -3,7 +3,7 @@ const {
   asyncHandler,
 } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createRestaurant,
   findAndUpdateRestaurant,
@@ -45,14 +45,29 @@ const addRestaurant = async (req, res) => {
         false,
         "Please enter a city for the restaurant."
       );
-    } else if (!isNotEmpty(phone)) {
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
       return sendResponse(
         res,
         400,
         false,
-        "Please enter a contact number for the restaurant."
+        "Please enter a valid contact number for the restaurant."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid website url for the restaurant."
+      );
+    } else if (!restaurant_images || restaurant_images.length <= 0) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please select images for the restaurant."
       );
     }
+
     const info = {
       name,
       description,
@@ -128,6 +143,43 @@ const editRestaurant = async (req, res) => {
         403,
         false,
         "You are not authorized to edit this restaurant record."
+      );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter the restaurant's name."
+      );
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter an address for the restaurant."
+      );
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a city for the restaurant."
+      );
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number for the restaurant."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid website url for the restaurant."
       );
     }
 
