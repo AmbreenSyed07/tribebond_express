@@ -1,9 +1,10 @@
-const {
-  asyncErrorHandler,
-  asyncHandler,
-} = require("../helper/async-error.helper");
+const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isWebsite,
+  isPhoneNo,
+} = require("../helper/validate.helpers");
 const {
   createGrocery,
   findAndUpdateGrocery,
@@ -30,9 +31,19 @@ const addGrocery = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!grocery_images || grocery_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -109,6 +120,23 @@ const editGrocery = async (req, res) => {
         false,
         "You are not authorized to edit this grocery."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -221,6 +249,10 @@ const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { groceryId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
+
+    if (!groceryId) {
+      return sendResponse(res, 400, false, "Please select a record.");
+    }
     const grocery = await findGroceryByIdHelper(groceryId);
     if (!grocery) {
       return sendResponse(res, 404, false, "Grocery not found");
@@ -233,6 +265,8 @@ const deleteImages = async (req, res) => {
         false,
         "You are not authorized to edit this grocery."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

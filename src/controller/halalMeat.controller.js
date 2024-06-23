@@ -250,6 +250,10 @@ const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { meatId, imageUrls } = req.body;
+
+     if (!meatId) {
+       return sendResponse(res, 400, false, "Please select a record.");
+     }
     const meat = await findMeatByIdHelper(meatId);
     if (!meat) {
       return sendResponse(res, 404, false, "Meat not found");
@@ -262,6 +266,8 @@ const deleteImages = async (req, res) => {
         false,
         "You are not authorized to edit this record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

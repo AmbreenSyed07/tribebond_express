@@ -26,30 +26,12 @@ const findAndUpdateGrocery = async (findInfo, setInfo) => {
 
 const findGroceryById = async (id) => {
   return asyncHandler(async () => {
-    const grocery = await Grocery.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
+    const grocery = await Grocery.findById({ _id: id, status: true })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
     if (grocery) {
-      let groceryObj = grocery.toObject();
-      groceryObj?.reviews &&
-        groceryObj?.reviews.length > 0 &&
-        groceryObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (groceryObj.images && groceryObj.images.length > 0) {
-        groceryObj.images = groceryObj.images.map((img) => {
-          return `${base_url}public/data/grocery/${groceryObj._id}/${img}`;
-        });
-      }
-      return groceryObj;
+      return modifyResponse([grocery], "grocery");
     } else {
       return false;
     }
@@ -64,31 +46,10 @@ const findGroceriesByCity = async (city) => {
     })
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (groceries.length > 0) {
-      const modifiedGroceries = groceries.map((grocery) => {
-        let groceryObj = grocery.toObject();
-
-        groceryObj?.reviews &&
-          groceryObj?.reviews.length > 0 &&
-          groceryObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (groceryObj.images && groceryObj.images.length > 0) {
-          groceryObj.images = groceryObj.images.map((img) => {
-            return `${base_url}public/data/grocery/${groceryObj._id}/${img}`;
-          });
-        }
-        return groceryObj;
-      });
-      return modifiedGroceries;
+      return modifyResponse(groceries, "grocery");
     } else {
       return false;
     }

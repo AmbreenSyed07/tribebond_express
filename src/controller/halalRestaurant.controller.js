@@ -295,11 +295,14 @@ const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { restaurantId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
+
+     if (!restaurantId) {
+       return sendResponse(res, 400, false, "Please select a record.");
+     }
     const restaurant = await findRestaurantByIdHelper(restaurantId);
     if (!restaurant) {
       return sendResponse(res, 404, false, "Restaurant not found");
     }
-
     // Check if the Beauty record's createdBy is equal to the user's id
     if (restaurant.createdBy.toString() !== userId.toString()) {
       return sendResponse(
@@ -308,6 +311,8 @@ const deleteImages = async (req, res) => {
         false,
         "You are not authorized to edit this restaurant record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {

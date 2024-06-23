@@ -50,6 +50,16 @@ const isPhoneNo = (value) => {
   return true;
 };
 
+const isWebsite = (value) => {
+  if (!value) {
+    return false;
+  }
+  if (value.toString().trim() === "") {
+    return false;
+  }
+  return true;
+};
+
 const isPassword = (value) => {
   if (!value.toString()) {
     return false;
@@ -67,6 +77,7 @@ module.exports = {
   isNotEmpty,
   isPassword,
   isPhoneNo,
+  isWebsite,
   isEmail,
   isID,
 };
