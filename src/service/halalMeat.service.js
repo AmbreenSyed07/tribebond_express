@@ -26,30 +26,12 @@ const findAndUpdateMeat = async (findInfo, setInfo) => {
 
 const findMeatById = async (id) => {
   return asyncHandler(async () => {
-    const meat = await HalalMeat.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
+    const meat = await HalalMeat.findOne({ _id: id, status: true })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
     if (meat) {
-      let meatObj = meat.toObject();
-      meatObj?.reviews &&
-        meatObj?.reviews.length > 0 &&
-        meatObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (meatObj.images && meatObj.images.length > 0) {
-        meatObj.images = meatObj.images.map((img) => {
-          return `${base_url}public/data/halal-meat/${meatObj._id}/${img}`;
-        });
-      }
-      return meatObj;
+    return  modifyResponse([meat], "halal-meat");
     } else {
       return false;
     }
@@ -64,32 +46,10 @@ const findMeatsByCity = async (city) => {
     })
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
       .exec();
-    // return meats.length > 0 ? meats : false;
     if (meats.length > 0) {
-      const modifiedMeats = meats.map((meat) => {
-        let meatObj = meat.toObject();
-
-        meatObj?.reviews &&
-          meatObj?.reviews.length > 0 &&
-          meatObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (meatObj.images && meatObj.images.length > 0) {
-          meatObj.images = meatObj.images.map((img) => {
-            return `${base_url}public/data/halal-meat/${meatObj._id}/${img}`;
-          });
-        }
-        return meatObj;
-      });
-      return modifiedMeats;
+      return modifyResponse(meats, "halal-meat");
     } else {
       return false;
     }
@@ -110,8 +70,10 @@ const searchHalalMeats = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("createdBy", "firstName lastName profilePicture")
+      .populate("reviews.user", "firstName lastName profilePicture")
       .exec();
     return halalMeats.length > 0
       ? modifyResponse(halalMeats, "halal-meat")

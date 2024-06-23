@@ -2,7 +2,7 @@ const {
   asyncErrorHandler,
 } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createMeat,
   findAndUpdateMeat,
@@ -29,9 +29,19 @@ const addMeat = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!meat_images || meat_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -110,8 +120,25 @@ const editMeat = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this halal meat record."
+        "You are not authorized to edit this record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -182,13 +209,12 @@ const getMeats = async (req, res) => {
     const { city } = req.tokenData;
     const { query } = req.query;
 
-
-     let meats;
-     if (query) {
-       meats = await searchHalalMeats(query);
-     } else {
-       meats = await findMeatsByCity(city);
-     }
+    let meats;
+    if (query) {
+      meats = await searchHalalMeats(query);
+    } else {
+      meats = await findMeatsByCity(city);
+    }
     if (!meats) {
       return sendResponse(res, 400, false, "No meats found.");
     }
@@ -222,6 +248,7 @@ const getMeatById = async (req, res) => {
 
 const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
+    const { _id: userId } = req.tokenData;
     const { meatId, imageUrls } = req.body;
     const meat = await findMeatByIdHelper(meatId);
     if (!meat) {
@@ -233,7 +260,7 @@ const deleteImages = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this halal meat record."
+        "You are not authorized to edit this record."
       );
     }
 
