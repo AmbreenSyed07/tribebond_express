@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const FoodCatering = require("../model/foodCatering.model");
 
 const createDiningLocation = async (info) => {
@@ -30,39 +30,15 @@ const findAndUpdateDiningLocation = async (findInfo, setInfo) => {
 
 const findDiningLocationById = async (id) => {
   return asyncHandler(async () => {
-    const diningLocation = await FoodCatering.findById({ _id: id })
+    const diningLocation = await FoodCatering.findOne({
+      _id: id,
+      status: true,
+    })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (diningLocation) {
-      let diningLocationObj = diningLocation.toObject();
-
-      if (
-        diningLocationObj.createdBy &&
-        diningLocationObj.createdBy.profilePicture &&
-        !diningLocationObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        diningLocationObj.createdBy.profilePicture = `${base_url}public/data/profile/${diningLocationObj.createdBy._id}/${diningLocationObj.createdBy.profilePicture}`;
-      }
-
-      diningLocationObj?.reviews &&
-        diningLocationObj?.reviews.length > 0 &&
-        diningLocationObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (diningLocationObj.images && diningLocationObj.images.length > 0) {
-        diningLocationObj.images = diningLocationObj.images.map((img) => {
-          return `${base_url}public/data/food-catering/${diningLocationObj._id}/${img}`;
-        });
-      }
-      return diningLocationObj;
+      return modifyResponse([diningLocation], "food-catering");
     } else {
       return false;
     }
@@ -80,37 +56,7 @@ const findDiningLocationsByCity = async (city) => {
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (diningLocations.length > 0) {
-      const modifiedDiningLocations = diningLocations.map((diningLocation) => {
-        let diningLocationObj = diningLocation.toObject();
-
-        if (
-          diningLocationObj.createdBy &&
-          diningLocationObj.createdBy.profilePicture &&
-          !diningLocationObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          diningLocationObj.createdBy.profilePicture = `${base_url}public/data/profile/${diningLocationObj.createdBy._id}/${diningLocationObj.createdBy.profilePicture}`;
-        }
-
-        diningLocationObj?.reviews &&
-          diningLocationObj?.reviews.length > 0 &&
-          diningLocationObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (diningLocationObj.images && diningLocationObj.images.length > 0) {
-          diningLocationObj.images = diningLocationObj.images.map((img) => {
-            return `${base_url}public/data/food-catering/${diningLocationObj._id}/${img}`;
-          });
-        }
-        return diningLocationObj;
-      });
-      return modifiedDiningLocations;
+      return modifyResponse(diningLocations, "food-catering");
     } else {
       return false;
     }
@@ -134,7 +80,9 @@ const searchFoodCaterings = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
+      .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     return foodCaterings.length > 0

@@ -235,11 +235,9 @@ const getHouseholdItems = async (req, res) => {
 const getHouseholdItemById = async (req, res) => {
   return asyncErrorHandler(async () => {
     let { id } = req.params;
-
     if (!id) {
       return sendResponse(res, 400, false, "Please select a record id.");
     }
-
     const householdItem = await findHouseholdItemById(id);
     if (!householdItem) {
       return sendResponse(res, 400, false, "Household item not found.");

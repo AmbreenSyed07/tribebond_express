@@ -18,7 +18,7 @@ const createHouseholdItem = async (info) => {
 const findAndUpdateHouseholdItem = async (findInfo, setInfo) => {
   return asyncHandler(async () => {
     const houseHoldItem = await Household.findOneAndUpdate(
-      findInfo, // Match both ID and Type
+      findInfo,
       {
         $set: setInfo,
       },
