@@ -1,5 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const Grocery = require("../model/grocery.model");
 
 const createGrocery = async (info) => {
@@ -26,7 +26,7 @@ const findAndUpdateGrocery = async (findInfo, setInfo) => {
 
 const findGroceryById = async (id) => {
   return asyncHandler(async () => {
-    const grocery = await Grocery.findById({ _id: id, status: true })
+    const grocery = await Grocery.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();

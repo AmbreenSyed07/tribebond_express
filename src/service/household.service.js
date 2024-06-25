@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const Household = require("../model/household.model");
 
 const createHouseholdItem = async (info) => {
@@ -30,30 +30,15 @@ const findAndUpdateHouseholdItem = async (findInfo, setInfo) => {
 
 const findHouseholdItemById = async (id) => {
   return asyncHandler(async () => {
-    const householdItem = await Household.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
+    const householdItem = await Household.findOne({
+      _id: id,
+      status: true,
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
     if (householdItem) {
-      let householdItemObj = householdItem.toObject();
-      householdItemObj?.reviews &&
-        householdItemObj?.reviews.length > 0 &&
-        householdItemObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (householdItemObj.images && householdItemObj.images.length > 0) {
-        householdItemObj.images = householdItemObj.images.map((img) => {
-          return `${base_url}public/data/household/images/${householdItemObj._id}/${img}`;
-        });
-      }
-      return householdItemObj;
+      return modifyResponse([householdItem], "household");
     } else {
       return false;
     }
@@ -70,29 +55,7 @@ const findHouseholdItemsByCity = async (city) => {
       .populate("reviews.user", "firstName lastName profilePicture")
       .exec();
     if (householdItems.length > 0) {
-      const modifiedHouseholdItems = householdItems.map((householdItem) => {
-        let householdItemObj = householdItem.toObject();
-
-        householdItemObj?.reviews &&
-          householdItemObj?.reviews.length > 0 &&
-          householdItemObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (householdItemObj.images && householdItemObj.images.length > 0) {
-          householdItemObj.images = householdItemObj.images.map((img) => {
-            return `${base_url}public/data/household/images/${householdItemObj._id}/${img}`;
-          });
-        }
-        return householdItemObj;
-      });
-      return modifiedHouseholdItems;
+      return modifyResponse(householdItems, "household");
     } else {
       return false;
     }
@@ -114,6 +77,7 @@ const searchHouseholds = async (query) => {
         { city: { $regex: query, $options: "i" } },
       ],
     })
+      .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     return households.length > 0

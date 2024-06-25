@@ -2,7 +2,11 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createHouseholdItem,
   findAndUpdateHouseholdItem,
@@ -29,8 +33,12 @@ const addHouseholdItem = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
       return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!household_images || household_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
     const info = {
       name,
@@ -51,7 +59,7 @@ const addHouseholdItem = async (req, res) => {
         if (!household_images[0]) {
           let fileName = await uploadAndCreateImage(
             household_images,
-            "household/images",
+            "household",
             newHouseholdItem._id,
             res
           );
@@ -60,7 +68,7 @@ const addHouseholdItem = async (req, res) => {
           for (let img of household_images) {
             let fileName = await uploadAndCreateImage(
               img,
-              "household/images",
+              "household",
               newHouseholdItem._id,
               res
             );
@@ -95,6 +103,10 @@ const editHouseholdItem = async (req, res) => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
 
+    if (!householdId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const checkHousehold = await findHouseholdItemByIdHelper(householdId);
     if (!checkHousehold) {
       return sendResponse(res, 404, false, "Household item not found");
@@ -107,6 +119,23 @@ const editHouseholdItem = async (req, res) => {
         false,
         "You are not authorized to edit this Household item."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -156,7 +185,7 @@ const editImage = async (householdId, images, res) => {
   if (!images[0]) {
     let fileName = await uploadAndCreateImage(
       images,
-      "household/images",
+      "household",
       householdId,
       res
     );
@@ -165,7 +194,7 @@ const editImage = async (householdId, images, res) => {
     for (let file of images) {
       let fileName = await uploadAndCreateImage(
         file,
-        "household/images",
+        "household",
         householdId,
         res
       );
@@ -206,6 +235,11 @@ const getHouseholdItems = async (req, res) => {
 const getHouseholdItemById = async (req, res) => {
   return asyncErrorHandler(async () => {
     let { id } = req.params;
+
+    if (!id) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const householdItem = await findHouseholdItemById(id);
     if (!householdItem) {
       return sendResponse(res, 400, false, "Household item not found.");
@@ -224,6 +258,11 @@ const deleteImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { householdId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
+
+    if (!householdId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const householdItem = await findHouseholdItemByIdHelper(householdId);
     if (!householdItem) {
       return sendResponse(res, 404, false, "Household item not found");
@@ -235,6 +274,8 @@ const deleteImages = async (req, res) => {
         false,
         "You are not authorized to edit this Household item."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -242,7 +283,7 @@ const deleteImages = async (req, res) => {
       const deletedImage = await deleteImageFromStorage(
         imageIdentifier,
         householdId,
-        "household/images"
+        "household"
       );
       householdItem.images = householdItem.images.filter(
         (img) => img !== imageIdentifier
@@ -264,6 +305,10 @@ const addReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { householdId, review } = req.body;
+
+    if (!householdId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }

@@ -107,6 +107,10 @@ const editGrocery = async (req, res) => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
 
+    if (!groceryId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const checkGrocery = await findGroceryByIdHelper(groceryId);
     if (!checkGrocery) {
       return sendResponse(res, 404, false, "Grocery not found");
@@ -231,6 +235,11 @@ const getGroceries = async (req, res) => {
 const getGroceryById = async (req, res) => {
   return asyncErrorHandler(async () => {
     let { id } = req.params;
+
+    if (!id) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const grocery = await findGroceryById(id);
     if (!grocery) {
       return sendResponse(res, 400, false, "Grocery not found.");
@@ -251,7 +260,7 @@ const deleteImages = async (req, res) => {
     const { _id: userId } = req.tokenData;
 
     if (!groceryId) {
-      return sendResponse(res, 400, false, "Please select a record.");
+      return sendResponse(res, 400, false, "Please select a record id.");
     }
     const grocery = await findGroceryByIdHelper(groceryId);
     if (!grocery) {
@@ -294,6 +303,10 @@ const addReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { groceryId, review } = req.body;
+
+    if (!groceryId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
