@@ -53,6 +53,7 @@ const findHouseholdItemsByCity = async (city) => {
     })
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (householdItems.length > 0) {
       return modifyResponse(householdItems, "household");
@@ -76,6 +77,7 @@ const searchHouseholds = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")

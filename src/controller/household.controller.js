@@ -272,7 +272,7 @@ const deleteImages = async (req, res) => {
         res,
         403,
         false,
-        "You are not authorized to edit this Household item."
+        "You are not authorized to edit this record."
       );
     } else if (!imageUrls || imageUrls.length <= 0) {
       return sendResponse(res, 400, false, "Please select images to delete.");
