@@ -8,6 +8,7 @@ const {
   deleteRentalImages,
   addRentalReview,
   searchRental,
+  deleteRental,
 } = require("../controller/rental.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -20,5 +21,6 @@ router.get("/display/:id", verifyToken, getRentalById);
 router.post("/delete-images", verifyToken, deleteRentalImages);
 router.post("/add-review", verifyToken, addRentalReview);
 router.post("/search", verifyToken, searchRental);
+router.patch("/delete/:id", verifyToken, deleteRental);
 
 module.exports = router;

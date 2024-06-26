@@ -2,7 +2,7 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const { isNotEmpty, isWebsite, isPhoneNo } = require("../helper/validate.helpers");
 const {
   createRental,
   findAndUpdateRental,
@@ -29,9 +29,19 @@ const addRental = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!rental_images || rental_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -107,6 +117,23 @@ const editRental = async (req, res) => {
         false,
         "You are not authorized to edit this rental record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -202,6 +229,11 @@ const deleteRentalImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { rentalId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
+
+    if (!rentalId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const rental = await findRentalByIdHelper(rentalId);
     if (!rental) {
       return sendResponse(res, 404, false, "Rental not found");
@@ -213,6 +245,8 @@ const deleteRentalImages = async (req, res) => {
         false,
         "You are not authorized to edit this rental record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -237,6 +271,10 @@ const addRentalReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { rentalId, review } = req.body;
+    if (!rentalId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -274,6 +312,44 @@ const searchRental = async (req, res) => {
   }, res);
 };
 
+const deleteRental = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const rental = await findRentalByIdHelper(id);
+    if (!rental) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (rental.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deleteRental = await findAndUpdateRental(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deleteRental) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addRental,
   editRental,
@@ -282,4 +358,5 @@ module.exports = {
   deleteRentalImages,
   addRentalReview,
   searchRental,
+  deleteRental,
 };
