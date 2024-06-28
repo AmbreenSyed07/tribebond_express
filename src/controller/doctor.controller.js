@@ -2,7 +2,12 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isEmail,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createDoctor,
   findAndUpdateDoctor,
@@ -38,11 +43,28 @@ const addDoctor = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
-    } else if (!isNotEmpty(email)) {
-      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!doctor_images || doctor_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -117,6 +139,46 @@ const editDoctor = async (req, res) => {
       website,
     } = req.body;
 
+    const checkDoctor = await findDoctorByIdHelper(doctorId);
+    if (!checkDoctor) {
+      return sendResponse(res, 404, false, "Doctor not found.");
+    }
+
+    if (checkDoctor.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(doctorId, images, res);
@@ -176,15 +238,15 @@ const getDoctors = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
 
-      const { query } = req.query;
+    const { query } = req.query;
 
-      let doctors;
-      if (query) {
-        doctors = await searchDoctors(query);
-      } else {
-        doctors = await findDoctorsByCity(city);
+    let doctors;
+    if (query) {
+      doctors = await searchDoctors(query);
+    } else {
+      doctors = await findDoctorsByCity(city);
     }
-    
+
     if (!doctors) {
       return sendResponse(res, 400, false, "No doctors found.");
     }
@@ -213,9 +275,25 @@ const getDoctorById = async (req, res) => {
 const deleteDoctorImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { doctorId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
+
+    if (!doctorId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const doctor = await findDoctorByIdHelper(doctorId);
     if (!doctor) {
       return sendResponse(res, 404, false, "Doctor not found");
+    }
+    if (doctor.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -240,6 +318,10 @@ const addDoctorReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     let { doctorId, review } = req.body;
+    if (!doctorId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -277,6 +359,44 @@ const searchDoctor = async (req, res) => {
   }, res);
 };
 
+const deleteDoctor = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const doctor = await findDoctorByIdHelper(id);
+    if (!doctor) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (doctor.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedDoctor = await findAndUpdateDoctor(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedDoctor) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addDoctor,
   editDoctor,
@@ -285,4 +405,5 @@ module.exports = {
   deleteDoctorImages,
   addDoctorReview,
   searchDoctor,
+  deleteDoctor,
 };

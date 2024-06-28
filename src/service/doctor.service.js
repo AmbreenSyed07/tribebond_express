@@ -28,38 +28,12 @@ const findAndUpdateDoctor = async (findInfo, setInfo) => {
 
 const findDoctorById = async (id) => {
   return asyncHandler(async () => {
-    let doctor = await Doctor.findById({ _id: id })
+    let doctor = await Doctor.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (doctor) {
-      let doctorObj = doctor.toObject();
-
-      if (
-        doctorObj.createdBy &&
-        doctorObj.createdBy.profilePicture &&
-        !doctorObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        doctorObj.createdBy.profilePicture = `${base_url}public/data/profile/${doctorObj.createdBy._id}/${doctorObj.createdBy.profilePicture}`;
-      }
-      doctorObj?.reviews &&
-        doctorObj?.reviews.length > 0 &&
-        doctorObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (doctorObj.images && doctorObj.images.length > 0) {
-        doctorObj.images = doctorObj.images.map((img) => {
-          return `${base_url}public/data/doctor/${doctorObj._id}/${img}`;
-        });
-      }
-      return doctorObj;
+      return modifyResponse([doctor], "doctor");
     } else {
       return false;
     }
@@ -75,40 +49,11 @@ const findDoctorsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (doctors.length > 0) {
-      const modifiedDoctors = doctors.map((doctor) => {
-        let doctorObj = doctor.toObject();
-
-        if (
-          doctorObj.createdBy &&
-          doctorObj.createdBy.profilePicture &&
-          !doctorObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          doctorObj.createdBy.profilePicture = `${base_url}public/data/profile/${doctorObj.createdBy._id}/${doctorObj.createdBy.profilePicture}`;
-        }
-
-        doctorObj?.reviews &&
-          doctorObj?.reviews.length > 0 &&
-          doctorObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (doctorObj.images && doctorObj.images.length > 0) {
-          doctorObj.images = doctorObj.images.map((img) => {
-            return `${base_url}public/data/doctor/${doctorObj._id}/${img}`;
-          });
-        }
-        return doctorObj;
-      });
-      return modifiedDoctors;
+      return modifyResponse(doctors, "doctor");
     } else {
       return false;
     }
@@ -129,9 +74,11 @@ const searchDoctors = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return doctors.length > 0 ? modifyResponse(doctors, "doctor") : false;
   });
