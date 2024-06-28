@@ -2,7 +2,12 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isEmail,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createHealthRecord,
   findAndUpdateHealthRecord,
@@ -38,11 +43,23 @@ const addHealthRecord = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
-    } else if (!isNotEmpty(email)) {
-      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(res, 400, false, "Please enter a valid contact number.");
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!health_images || health_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -131,6 +148,27 @@ const editHealthRecord = async (req, res) => {
       );
     }
 
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(res, 400, false, "Please enter a valid contact number.");
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(healthRecordId, images, res);
@@ -204,16 +242,15 @@ const getHealthRecords = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
 
-   const { query } = req.query;
+    const { query } = req.query;
 
-   let healthRecords;
-   if (query) {
-     healthRecords = await searchHealthRecords(query);
-   } else {
-     healthRecords = await findHealthRecordsByCity(city);
-   }
+    let healthRecords;
+    if (query) {
+      healthRecords = await searchHealthRecords(query);
+    } else {
+      healthRecords = await findHealthRecordsByCity(city);
+    }
 
-   
     if (!healthRecords) {
       return sendResponse(res, 400, false, "No health records found.");
     }
@@ -250,6 +287,10 @@ const deleteHealthRecordImages = async (req, res) => {
     const { healthRecordId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
 
+    if (!healthRecordId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const healthRecord = await findHealthRecordByIdHelper(healthRecordId);
     if (!healthRecord) {
       return sendResponse(res, 404, false, "Health record not found");
@@ -262,6 +303,8 @@ const deleteHealthRecordImages = async (req, res) => {
         false,
         "You are not authorized to edit this record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -291,10 +334,14 @@ const addHealthRecordReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     let { healthRecordId, review } = req.body;
+    if (!healthRecordId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
-    let healthRecord = await findHealthRecordByIdHelper(healthRecordId);
+    const healthRecord = await findHealthRecordByIdHelper(healthRecordId);
     if (!healthRecord) {
       return sendResponse(res, 404, false, "Health record not found.");
     }
@@ -328,6 +375,44 @@ const searchHealthRecord = async (req, res) => {
   }, res);
 };
 
+const deleteHealthRecord = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const healthRecord = await findHealthRecordByIdHelper(id);
+    if (!healthRecord) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (healthRecord.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deleteRecord = await findAndUpdateHealthRecord(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deleteRecord) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addHealthRecord,
   editHealthRecord,
@@ -336,4 +421,5 @@ module.exports = {
   deleteHealthRecordImages,
   addHealthRecordReview,
   searchHealthRecord,
+  deleteHealthRecord,
 };

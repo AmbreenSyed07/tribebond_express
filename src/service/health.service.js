@@ -35,33 +35,7 @@ const findHealthRecordById = async (id) => {
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (healthRecord) {
-      let healthRecordObj = healthRecord.toObject();
-
-      if (
-        healthRecordObj.createdBy &&
-        healthRecordObj.createdBy.profilePicture &&
-        !healthRecordObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        healthRecordObj.createdBy.profilePicture = `${base_url}public/data/profile/${healthRecordObj.createdBy._id}/${healthRecordObj.createdBy.profilePicture}`;
-      }
-      healthRecordObj?.reviews &&
-        healthRecordObj?.reviews.length > 0 &&
-        healthRecordObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (healthRecordObj.images && healthRecordObj.images.length > 0) {
-        healthRecordObj.images = healthRecordObj.images.map((img) => {
-          return `${base_url}public/data/health/${healthRecordObj._id}/${img}`;
-        });
-      }
-      return healthRecordObj;
+      return modifyResponse([healthRecord], "health");
     } else {
       return false;
     }
@@ -77,40 +51,11 @@ const findHealthRecordsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (healthRecords.length > 0) {
-      const modifiedHealthRecords = healthRecords.map((healthRecord) => {
-        let healthRecordObj = healthRecord.toObject();
-
-        if (
-          healthRecordObj.createdBy &&
-          healthRecordObj.createdBy.profilePicture &&
-          !healthRecordObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          healthRecordObj.createdBy.profilePicture = `${base_url}public/data/profile/${healthRecordObj.createdBy._id}/${healthRecordObj.createdBy.profilePicture}`;
-        }
-
-        healthRecordObj?.reviews &&
-          healthRecordObj?.reviews.length > 0 &&
-          healthRecordObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (healthRecordObj.images && healthRecordObj.images.length > 0) {
-          healthRecordObj.images = healthRecordObj.images.map((img) => {
-            return `${base_url}public/data/health/${healthRecordObj._id}/${img}`;
-          });
-        }
-        return healthRecordObj;
-      });
-      return modifiedHealthRecords;
+      return modifyResponse(healthRecords, "health");
     } else {
       return false;
     }
@@ -131,9 +76,11 @@ const searchHealthRecords = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (healthRecords.length > 0) {
       return modifyResponse(healthRecords, "health");

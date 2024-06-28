@@ -8,6 +8,7 @@ const {
   deleteHealthRecordImages,
   addHealthRecordReview,
   searchHealthRecord,
+  deleteHealthRecord,
 } = require("../controller/health.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -20,5 +21,6 @@ router.get("/display/:id", verifyToken, getHealthRecordById);
 router.post("/delete-images", verifyToken, deleteHealthRecordImages);
 router.post("/add-review", verifyToken, addHealthRecordReview);
 router.post("/search", verifyToken, searchHealthRecord);
+router.patch("/delete/:id", verifyToken, deleteHealthRecord);
 
 module.exports = router;
