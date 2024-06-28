@@ -2,7 +2,11 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createAutomobile,
   findAndUpdateAutomobile,
@@ -29,9 +33,19 @@ const addAutomobile = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!automobile_images || automobile_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -107,6 +121,23 @@ const editAutomobile = async (req, res) => {
       );
     }
 
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(automobileId, images, res);
@@ -173,14 +204,14 @@ const getAutomobiles = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
 
-const { query } = req.query;
+    const { query } = req.query;
 
-let automobiles;
-if (query) {
-  automobiles = await searchAutomobiles(query);
-} else {
-  automobiles = await findAutomobilesByCity(city);
-}
+    let automobiles;
+    if (query) {
+      automobiles = await searchAutomobiles(query);
+    } else {
+      automobiles = await findAutomobilesByCity(city);
+    }
 
     if (!automobiles) {
       return sendResponse(res, 400, false, "No automobiles found.");
@@ -216,9 +247,25 @@ const getAutomobileById = async (req, res) => {
 const deleteAutomobileImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { automobileId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
+
+    if (!automobileId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const automobile = await findAutomobileByIdHelper(automobileId);
     if (!automobile) {
       return sendResponse(res, 404, false, "Automobile not found");
+    }
+    if (automobile.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -244,6 +291,10 @@ const addAutomobileReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { automobileId, review } = req.body;
+    if (!automobileId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -281,6 +332,44 @@ const searchAutomobile = async (req, res) => {
   }, res);
 };
 
+const deleteAutomobile = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const automobile = await findAutomobileByIdHelper(id);
+    if (!automobile) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (automobile.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedAutomobile = await findAndUpdateAutomobile(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedAutomobile) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addAutomobile,
   editAutomobile,
@@ -289,4 +378,5 @@ module.exports = {
   deleteAutomobileImages,
   addAutomobileReview,
   searchAutomobile,
+  deleteAutomobile,
 };

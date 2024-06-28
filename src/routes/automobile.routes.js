@@ -8,6 +8,7 @@ const {
   deleteAutomobileImages,
   addAutomobileReview,
   searchAutomobile,
+  deleteAutomobile,
 } = require("../controller/automobile.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -20,5 +21,6 @@ router.get("/display/:id", verifyToken, getAutomobileById);
 router.post("/delete-images", verifyToken, deleteAutomobileImages);
 router.post("/add-review", verifyToken, addAutomobileReview);
 router.post("/search", verifyToken, searchAutomobile);
+router.patch("/delete/:id", verifyToken, deleteAutomobile);
 
 module.exports = router;
