@@ -2,7 +2,11 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createSweetShop,
   findAndUpdateSweetShop,
@@ -29,8 +33,17 @@ const addSweetShop = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!shop_images || shop_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
 
     const info = {
@@ -96,7 +109,7 @@ const editSweetShop = async (req, res) => {
     const { _id: userId } = req.tokenData;
     const { name, description, address, city, phone, website } = req.body;
 
-    const sweetRecord = await findSweetShopByIdHelper(rentalId);
+    const sweetRecord = await findSweetShopByIdHelper(shopId);
     if (!sweetRecord) {
       return sendResponse(res, 404, false, "Record not found");
     }
@@ -108,6 +121,23 @@ const editSweetShop = async (req, res) => {
         false,
         "You are not authorized to edit this record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -220,6 +250,10 @@ const deleteSweetShopImages = async (req, res) => {
     const { shopId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
 
+    if (!shopId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const sweetShop = await findSweetShopByIdHelper(shopId);
     if (!sweetShop) {
       return sendResponse(res, 404, false, "Sweet shop not found");
@@ -231,6 +265,8 @@ const deleteSweetShopImages = async (req, res) => {
         false,
         "You are not authorized to edit this record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -260,6 +296,9 @@ const addSweetShopReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { shopId, review } = req.body;
+    if (!shopId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -291,6 +330,44 @@ const searchSweet = async (req, res) => {
   }, res);
 };
 
+const deleteSweet = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const sweet = await findSweetShopByIdHelper(id);
+    if (!sweet) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (sweet.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deleteSweet = await findAndUpdateSweetShop(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deleteSweet) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addSweetShop,
   editSweetShop,
@@ -299,4 +376,5 @@ module.exports = {
   deleteSweetShopImages,
   addSweetShopReview,
   searchSweet,
+  deleteSweet,
 };

@@ -8,6 +8,7 @@ const {
   deleteSweetShopImages,
   addSweetShopReview,
   searchSweet,
+  deleteSweet,
 } = require("../controller/sweets.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -20,5 +21,6 @@ router.get("/display/:id", verifyToken, getSweetShopById);
 router.post("/delete-images", verifyToken, deleteSweetShopImages);
 router.post("/add-review", verifyToken, addSweetShopReview);
 router.post("/search", verifyToken, searchSweet);
+router.patch("/delete/:id", verifyToken, deleteSweet);
 
 module.exports = router;

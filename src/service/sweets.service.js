@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const SweetShop = require("../model/sweets.model");
 
 const createSweetShop = async (info) => {
@@ -29,30 +29,15 @@ const findAndUpdateSweetShop = async (findInfo, setInfo) => {
 
 const findSweetShopById = async (id) => {
   return asyncHandler(async () => {
-    const sweetShop = await SweetShop.findById({ _id: id }).populate(
-      "reviews.user",
-      "firstName lastName profilePicture"
-    );
+    const sweetShop = await SweetShop.findOne({
+      _id: id,
+      status: true,
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
     if (sweetShop) {
-      let sweetShopObj = sweetShop.toObject();
-      sweetShopObj?.reviews &&
-        sweetShopObj?.reviews.length > 0 &&
-        sweetShopObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (sweetShopObj.images && sweetShopObj.images.length > 0) {
-        sweetShopObj.images = sweetShopObj.images.map((img) => {
-          return `${base_url}public/data/sweets/${sweetShopObj._id}/${img}`;
-        });
-      }
-      return sweetShopObj;
+      return modifyResponse([sweetShop], "sweets");
     } else {
       return false;
     }
@@ -70,29 +55,7 @@ const findSweetShopsByCity = async (city) => {
       .populate("reviews.user", "firstName lastName profilePicture")
       .exec();
     if (sweetShops.length > 0) {
-      const modifiedSweetShops = sweetShops.map((sweetShop) => {
-        let sweetShopObj = sweetShop.toObject();
-
-        sweetShopObj?.reviews &&
-          sweetShopObj?.reviews.length > 0 &&
-          sweetShopObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (sweetShopObj.images && sweetShopObj.images.length > 0) {
-          sweetShopObj.images = sweetShopObj.images.map((img) => {
-            return `${base_url}public/data/sweets/${sweetShopObj._id}/${img}`;
-          });
-        }
-        return sweetShopObj;
-      });
-      return modifiedSweetShops;
+      return modifyResponse(sweetShops, "sweets");
     } else {
       return false;
     }
@@ -113,6 +76,7 @@ const searchSweets = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
