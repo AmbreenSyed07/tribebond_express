@@ -2,7 +2,11 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createParty,
   findAndUpdateParty,
@@ -29,9 +33,19 @@ const addParty = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an  address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!party_images || party_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -104,6 +118,23 @@ const editParty = async (req, res) => {
         false,
         "You are not authorized to edit this party."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an  address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -199,9 +230,25 @@ const getPartyById = async (req, res) => {
 const deletePartyImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { partyId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
+
+    if (!partyId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const party = await findPartyByIdHelper(partyId);
     if (!party) {
-      return sendResponse(res, 404, false, "Party not found");
+      return sendResponse(res, 404, false, "Record not found.");
+    }
+    if (party.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -222,6 +269,10 @@ const addPartyReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { partyId, review } = req.body;
+
+    if (!partyId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -259,6 +310,44 @@ const searchParty = async (req, res) => {
   }, res);
 };
 
+const deleteParty = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const party = await findPartyByIdHelper(id);
+    if (!party) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (party.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deleteParty = await findAndUpdateParty(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deleteParty) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addParty,
   editParty,
@@ -267,4 +356,5 @@ module.exports = {
   deletePartyImages,
   addPartyReview,
   searchParty,
+  deleteParty,
 };
