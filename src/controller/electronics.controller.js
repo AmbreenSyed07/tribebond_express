@@ -2,7 +2,12 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isEmail,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createElectronic,
   findAndUpdateElectronic,
@@ -38,11 +43,28 @@ const addElectronic = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
-    } else if (!isNotEmpty(email)) {
-      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!electronic_images || electronic_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -134,6 +156,32 @@ const editElectronic = async (req, res) => {
         false,
         "You are not authorized to edit this record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -250,6 +298,10 @@ const deleteElectronicImages = async (req, res) => {
     const { electronicId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
 
+    if (!electronicId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const electronic = await findElectronicByIdHelper(electronicId);
     if (!electronic) {
       return sendResponse(res, 404, false, "Electronic item not found");
@@ -261,6 +313,8 @@ const deleteElectronicImages = async (req, res) => {
         false,
         "You are not authorized to edit this record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -290,6 +344,10 @@ const addElectronicReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { electronicId, review } = req.body;
+    if (!electronicId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -327,6 +385,44 @@ const searchElectronic = async (req, res) => {
   }, res);
 };
 
+const deleteElectronic = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const electronic = await findElectronicByIdHelper(id);
+    if (!electronic) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (electronic.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deleteElectronic = await findAndUpdateElectronic(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deleteElectronic) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addElectronic,
   editElectronic,
@@ -335,4 +431,5 @@ module.exports = {
   deleteElectronicImages,
   addElectronicReview,
   searchElectronic,
+  deleteElectronic,
 };

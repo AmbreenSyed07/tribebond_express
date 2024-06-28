@@ -30,38 +30,12 @@ const findAndUpdateElectronic = async (findInfo, setInfo) => {
 
 const findElectronicById = async (id) => {
   return asyncHandler(async () => {
-    const electronic = await Electronic.findById({ _id: id })
+    const electronic = await Electronic.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (electronic) {
-      let electronicObj = electronic.toObject();
-
-      if (
-        electronicObj.createdBy &&
-        electronicObj.createdBy.profilePicture &&
-        !electronicObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        electronicObj.createdBy.profilePicture = `${base_url}public/data/profile/${electronicObj.createdBy._id}/${electronicObj.createdBy.profilePicture}`;
-      }
-      electronicObj?.reviews &&
-        electronicObj?.reviews.length > 0 &&
-        electronicObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (electronicObj.images && electronicObj.images.length > 0) {
-        electronicObj.images = electronicObj.images.map((img) => {
-          return `${base_url}public/data/electronics/${electronicObj._id}/${img}`;
-        });
-      }
-      return electronicObj;
+      return modifyResponse([electronic], "electronics");
     } else {
       return false;
     }
@@ -77,40 +51,11 @@ const findElectronicsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (electronics.length > 0) {
-      const modifiedElectronics = electronics.map((electronic) => {
-        let electronicObj = electronic.toObject();
-
-        if (
-          electronicObj.createdBy &&
-          electronicObj.createdBy.profilePicture &&
-          !electronicObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          electronicObj.createdBy.profilePicture = `${base_url}public/data/profile/${electronicObj.createdBy._id}/${electronicObj.createdBy.profilePicture}`;
-        }
-
-        electronicObj?.reviews &&
-          electronicObj?.reviews.length > 0 &&
-          electronicObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (electronicObj.images && electronicObj.images.length > 0) {
-          electronicObj.images = electronicObj.images.map((img) => {
-            return `${base_url}public/data/electronics/${electronicObj._id}/${img}`;
-          });
-        }
-        return electronicObj;
-      });
-      return modifiedElectronics;
+      return modifyResponse(electronics, "electronics");
     } else {
       return false;
     }
@@ -131,9 +76,11 @@ const searchElectronics = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return electronics.length > 0
       ? modifyResponse(electronics, "electronics")
