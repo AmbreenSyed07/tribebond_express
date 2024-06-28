@@ -28,38 +28,12 @@ const findAndUpdateLegal = async (findInfo, setInfo) => {
 
 const findLegalById = async (id) => {
   return asyncHandler(async () => {
-    const legal = await Legal.findById({ _id: id })
+    const legal = await Legal.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (legal) {
-      let legalObj = legal.toObject();
-
-      if (
-        legalObj.createdBy &&
-        legalObj.createdBy.profilePicture &&
-        !legalObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        legalObj.createdBy.profilePicture = `${base_url}public/data/profile/${legalObj.createdBy._id}/${legalObj.createdBy.profilePicture}`;
-      }
-      legalObj?.reviews &&
-        legalObj?.reviews.length > 0 &&
-        legalObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (legalObj.images && legalObj.images.length > 0) {
-        legalObj.images = legalObj.images.map((img) => {
-          return `${base_url}public/data/legal/${legalObj._id}/${img}`;
-        });
-      }
-      return legalObj;
+      return modifyResponse([legal], "legal");
     } else {
       return false;
     }
@@ -75,40 +49,11 @@ const findLegalsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (legals.length > 0) {
-      const modifiedLegals = legals.map((legal) => {
-        let legalObj = legal.toObject();
-
-        if (
-          legalObj.createdBy &&
-          legalObj.createdBy.profilePicture &&
-          !legalObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          legalObj.createdBy.profilePicture = `${base_url}public/data/profile/${legalObj.createdBy._id}/${legalObj.createdBy.profilePicture}`;
-        }
-
-        legalObj?.reviews &&
-          legalObj?.reviews.length > 0 &&
-          legalObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (legalObj.images && legalObj.images.length > 0) {
-          legalObj.images = legalObj.images.map((img) => {
-            return `${base_url}public/data/legal/${legalObj._id}/${img}`;
-          });
-        }
-        return legalObj;
-      });
-      return modifiedLegals;
+      return modifyResponse(legals, "legal");
     } else {
       return false;
     }
@@ -129,9 +74,11 @@ const searchLegals = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return legals.length > 0 ? modifyResponse(legals, "legal") : false;
   });

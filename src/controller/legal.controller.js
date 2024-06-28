@@ -2,14 +2,18 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isPhoneNo,
+  isEmail,
+  isWebsite,
+} = require("../helper/validate.helpers");
 const {
   createLegal,
   findAndUpdateLegal,
   findLegalByIdHelper,
   findLegalById,
   findLegalsByCity,
-  deleteLegalImages: deleteLegalImagesService,
   searchLegals,
 } = require("../service/legal.service");
 const {
@@ -39,11 +43,28 @@ const addLegal = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
-    } else if (!isNotEmpty(email)) {
-      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!legal_images || legal_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -135,6 +156,32 @@ const editLegal = async (req, res) => {
       );
     }
 
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(legalId, images, res);
@@ -198,14 +245,14 @@ const getLegals = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
 
-const { query } = req.query;
+    const { query } = req.query;
 
-let legals;
-if (query) {
-  legals = await searchLegals(query);
-} else {
-  legals = await findLegalsByCity(city);
-}
+    let legals;
+    if (query) {
+      legals = await searchLegals(query);
+    } else {
+      legals = await findLegalsByCity(city);
+    }
 
     if (!legals) {
       return sendResponse(
@@ -246,9 +293,25 @@ const getLegalById = async (req, res) => {
 const deleteLegalImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { legalId, imageUrls } = req.body;
+    const { _id: userId } = req.tokenData;
+
+    if (!legalId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const legal = await findLegalByIdHelper(legalId);
     if (!legal) {
       return sendResponse(res, 404, false, "Legal service/document not found");
+    }
+    if (legal.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to edit this record."
+      );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -269,6 +332,10 @@ const addLegalReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { legalId, review } = req.body;
+    if (!legalId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -300,6 +367,44 @@ const searchLegal = async (req, res) => {
   }, res);
 };
 
+const deleteLegal = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const legal = await findLegalByIdHelper(id);
+    if (!legal) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (legal.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedLegal = await findAndUpdateLegal(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedLegal) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addLegal,
   editLegal,
@@ -308,4 +413,5 @@ module.exports = {
   deleteLegalImages,
   addLegalReview,
   searchLegal,
+  deleteLegal,
 };

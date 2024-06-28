@@ -8,6 +8,7 @@ const {
   deleteLegalImages,
   addLegalReview,
   searchLegal,
+  deleteLegal,
 } = require("../controller/legal.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -20,5 +21,6 @@ router.get("/display/:id", verifyToken, getLegalById);
 router.post("/delete-images", verifyToken, deleteLegalImages);
 router.post("/add-review", verifyToken, addLegalReview);
 router.post("/search", verifyToken, searchLegal);
+router.patch("/delete/:id", verifyToken, deleteLegal);
 
 module.exports = router;
