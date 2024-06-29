@@ -2,7 +2,12 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isEmail,
+  isPhoneNo,
+  isPrice,
+} = require("../helper/validate.helpers");
 const {
   createRealEstateRecord,
   findAndUpdateRealEstateRecord,
@@ -29,11 +34,21 @@ const addRealEstateRecord = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
-    } else if (!isNotEmpty(email)) {
-      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isPrice(price)) {
+      return sendResponse(res, 400, false, "Please enter a valid price.");
+    } else if (!realEstate_images || realEstate_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -116,6 +131,25 @@ const editRealEstateRecord = async (req, res) => {
         false,
         "You are not authorized to edit this Real estate record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isPrice(price)) {
+      return sendResponse(res, 400, false, "Please enter a valid price.");
     }
 
     if (req.files) {
@@ -239,14 +273,17 @@ const deleteRealEstateRecordImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { realEstateRecordId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
+
+    if (!realEstateRecordId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const realEstateRecord = await findRealEstateRecordByIdHelper(
       realEstateRecordId
     );
     if (!realEstateRecord) {
       return sendResponse(res, 404, false, "Real estate record not found");
     }
-
-    // Check if the Real estate record's createdBy is equal to the user's id
     if (realEstateRecord.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
@@ -254,6 +291,8 @@ const deleteRealEstateRecordImages = async (req, res) => {
         false,
         "You are not authorized to delete images of this Real estate record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -282,7 +321,11 @@ const deleteRealEstateRecordImages = async (req, res) => {
 const addRealEstateRecordReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
-    let { realEstateRecordId, review } = req.body;
+    const { realEstateRecordId, review } = req.body;
+    if (!realEstateRecordId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -322,6 +365,44 @@ const searchRealEstate = async (req, res) => {
   }, res);
 };
 
+const deleteRealEstate = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const realEstate = await findRealEstateRecordByIdHelper(id);
+    if (!realEstate) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (realEstate.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedRealEstate = await findAndUpdateRealEstateRecord(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedRealEstate) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addRealEstateRecord,
   editRealEstateRecord,
@@ -330,4 +411,5 @@ module.exports = {
   deleteRealEstateRecordImages,
   addRealEstateRecordReview,
   searchRealEstate,
+  deleteRealEstate,
 };

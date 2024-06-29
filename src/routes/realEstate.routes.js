@@ -8,6 +8,7 @@ const {
   deleteRealEstateRecordImages,
   addRealEstateRecordReview,
   searchRealEstate,
+  deleteRealEstate,
 } = require("../controller/realEstate.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -20,5 +21,6 @@ router.get("/display/:id", verifyToken, getRealEstateRecordById);
 router.post("/delete-images", verifyToken, deleteRealEstateRecordImages);
 router.post("/add-review", verifyToken, addRealEstateRecordReview);
 router.post("/search", verifyToken, searchRealEstate);
+router.patch("/delete/:id", verifyToken, deleteRealEstate);
 
 module.exports = router;

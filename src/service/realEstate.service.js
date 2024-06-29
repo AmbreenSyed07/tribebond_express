@@ -38,33 +38,7 @@ const findRealEstateRecordById = async (id) => {
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (realEstateRecord) {
-      let realEstateRecordObj = realEstateRecord.toObject();
-
-      if (
-        realEstateRecordObj.createdBy &&
-        realEstateRecordObj.createdBy.profilePicture &&
-        !realEstateRecordObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        realEstateRecordObj.createdBy.profilePicture = `${base_url}public/data/profile/${realEstateRecordObj.createdBy._id}/${realEstateRecordObj.createdBy.profilePicture}`;
-      }
-      realEstateRecordObj?.reviews &&
-        realEstateRecordObj?.reviews.length > 0 &&
-        realEstateRecordObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (realEstateRecordObj.images && realEstateRecordObj.images.length > 0) {
-        realEstateRecordObj.images = realEstateRecordObj.images.map((img) => {
-          return `${base_url}public/data/realEstate/${realEstateRecordObj._id}/${img}`;
-        });
-      }
-      return realEstateRecordObj;
+      return modifyResponse([realEstateRecord], "realEstate");
     } else {
       return false;
     }
@@ -80,47 +54,11 @@ const findRealEstateRecordsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (realEstateRecords.length > 0) {
-      const modifiedRealEstateRecords = realEstateRecords.map(
-        (realEstateRecord) => {
-          let realEstateRecordObj = realEstateRecord.toObject();
-
-          if (
-            realEstateRecordObj.createdBy &&
-            realEstateRecordObj.createdBy.profilePicture &&
-            !realEstateRecordObj.createdBy.profilePicture.startsWith(base_url)
-          ) {
-            realEstateRecordObj.createdBy.profilePicture = `${base_url}public/data/profile/${realEstateRecordObj.createdBy._id}/${realEstateRecordObj.createdBy.profilePicture}`;
-          }
-
-          realEstateRecordObj?.reviews &&
-            realEstateRecordObj?.reviews.length > 0 &&
-            realEstateRecordObj?.reviews.forEach((review) => {
-              if (
-                review.user &&
-                review.user.profilePicture &&
-                !review.user.profilePicture.startsWith(base_url)
-              ) {
-                review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-              }
-            });
-
-          if (
-            realEstateRecordObj.images &&
-            realEstateRecordObj.images.length > 0
-          ) {
-            realEstateRecordObj.images = realEstateRecordObj.images.map(
-              (img) => {
-                return `${base_url}public/data/realEstate/${realEstateRecordObj._id}/${img}`;
-              }
-            );
-          }
-          return realEstateRecordObj;
-        }
-      );
-      return modifiedRealEstateRecords;
+      return modifyResponse(realEstateRecords, "realEstate");
     } else {
       return false;
     }
@@ -144,9 +82,11 @@ const searchRealEstates = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { price: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (realEstates.length > 0) {
       return modifyResponse(realEstates, "realEstate");
