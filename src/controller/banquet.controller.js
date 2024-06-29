@@ -2,7 +2,11 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isWebsite,
+  isPhoneNo,
+} = require("../helper/validate.helpers");
 const {
   createBanquet,
   findAndUpdateBanquet,
@@ -29,9 +33,19 @@ const addBanquet = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!banquet_images || banquet_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -97,16 +111,32 @@ const editBanquet = async (req, res) => {
 
     const checkBanquet = await findBanquetByIdHelper(banquetId);
     if (!checkBanquet) {
-      return sendResponse(res, 404, false, "Banquet not found.");
+      return sendResponse(res, 404, false, "Record not found.");
     }
-    // Check if the Banquet's createdBy is equal to the user's id
     if (checkBanquet.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
         403,
         false,
-        "You are not authorized to edit this Banquet."
+        "You are not authorized to edit this record."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -143,7 +173,7 @@ const editBanquet = async (req, res) => {
 const editImage = async (banquetId, images, res) => {
   const banquet = await findBanquetByIdHelper(banquetId);
   if (!banquet) {
-    return sendResponse(res, 400, false, "Banquet not found.");
+    return sendResponse(res, 400, false, "Record not found.");
   }
 
   // Assuming images is an array of files
@@ -204,7 +234,7 @@ const getBanquetById = async (req, res) => {
     let { id } = req.params;
     const banquet = await findBanquetById(id);
     if (!banquet) {
-      return sendResponse(res, 400, false, "Banquet not found.");
+      return sendResponse(res, 400, false, "Record not found.");
     }
     return sendResponse(
       res,
@@ -220,19 +250,25 @@ const deleteBanquetImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { banquetId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
-    const banquet = await findBanquetByIdHelper(banquetId);
-    if (!banquet) {
-      return sendResponse(res, 404, false, "Banquet not found");
+
+    if (!banquetId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
     }
 
-    // Check if the Banquet's createdBy is equal to the user's id
+    const banquet = await findBanquetByIdHelper(banquetId);
+    if (!banquet) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+
     if (banquet.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
         403,
         false,
-        "You are not authorized to edit this Banquet."
+        "You are not authorized to edit this record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -260,12 +296,15 @@ const addBanquetReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     const { banquetId, review } = req.body;
+    if (!banquetId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
     const banquet = await findBanquetByIdHelper(banquetId);
     if (!banquet) {
-      return sendResponse(res, 404, false, "Banquet not found.");
+      return sendResponse(res, 404, false, "Record not found.");
     }
     const newReview = { user: userId, reviewText: review };
     banquet.reviews.unshift(newReview);
@@ -297,6 +336,44 @@ const searchBanquet = async (req, res) => {
   }, res);
 };
 
+const deleteBanquet = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const banquet = await findBanquetByIdHelper(id);
+    if (!banquet) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (banquet.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedBanquet = await findAndUpdateBanquet(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedBanquet) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addBanquet,
   editBanquet,
@@ -305,4 +382,5 @@ module.exports = {
   deleteBanquetImages,
   addBanquetReview,
   searchBanquet,
+  deleteBanquet,
 };

@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const Banquet = require("../model/banquet.model");
 
 const createBanquet = async (info) => {
@@ -33,33 +33,7 @@ const findBanquetById = async (id) => {
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (banquet) {
-      let banquetObj = banquet.toObject();
-
-      if (
-        banquetObj.createdBy &&
-        banquetObj.createdBy.profilePicture &&
-        !banquetObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        banquetObj.createdBy.profilePicture = `${base_url}public/data/profile/${banquetObj.createdBy._id}/${banquetObj.createdBy.profilePicture}`;
-      }
-      banquetObj?.reviews &&
-        banquetObj?.reviews.length > 0 &&
-        banquetObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (banquetObj.images && banquetObj.images.length > 0) {
-        banquetObj.images = banquetObj.images.map((img) => {
-          return `${base_url}public/data/banquet/${banquetObj._id}/${img}`;
-        });
-      }
-      return banquetObj;
+      return modifyResponse([banquet], "banquet");
     } else {
       return false;
     }
@@ -75,40 +49,11 @@ const findBanquetsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (banquets.length > 0) {
-      const modifiedBanquets = banquets.map((banquet) => {
-        let banquetObj = banquet.toObject();
-
-        if (
-          banquetObj.createdBy &&
-          banquetObj.createdBy.profilePicture &&
-          !banquetObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          banquetObj.createdBy.profilePicture = `${base_url}public/data/profile/${banquetObj.createdBy._id}/${banquetObj.createdBy.profilePicture}`;
-        }
-
-        banquetObj?.reviews &&
-          banquetObj?.reviews.length > 0 &&
-          banquetObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (banquetObj.images && banquetObj.images.length > 0) {
-          banquetObj.images = banquetObj.images.map((img) => {
-            return `${base_url}public/data/banquet/${banquetObj._id}/${img}`;
-          });
-        }
-        return banquetObj;
-      });
-      return modifiedBanquets;
+      return modifyResponse(banquets, "banquet");
     } else {
       return false;
     }
@@ -129,9 +74,11 @@ const searchBanquets = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return banquets.length > 0 ? modifyResponse(banquets, "banquet") : false;
   });
