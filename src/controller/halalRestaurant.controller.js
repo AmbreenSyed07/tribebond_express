@@ -1,7 +1,4 @@
-const {
-  asyncErrorHandler,
-  asyncHandler,
-} = require("../helper/async-error.helper");
+const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
 const { isNotEmpty, isPhoneNo } = require("../helper/validate.helpers");
 const {
@@ -296,9 +293,9 @@ const deleteImages = async (req, res) => {
     const { restaurantId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
 
-     if (!restaurantId) {
-       return sendResponse(res, 400, false, "Please select a record.");
-     }
+    if (!restaurantId) {
+      return sendResponse(res, 400, false, "Please select a record.");
+    }
     const restaurant = await findRestaurantByIdHelper(restaurantId);
     if (!restaurant) {
       return sendResponse(res, 404, false, "Restaurant not found");
@@ -379,6 +376,44 @@ const searchHalalRestaurant = async (req, res) => {
   }, res);
 };
 
+const deleteHalalRestaurant = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const restaurant = await findRestaurantByIdHelper(id);
+    if (!restaurant) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (restaurant.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedRestaurant = await findAndUpdateRestaurant(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedRestaurant) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addRestaurant,
   editRestaurant,
@@ -387,4 +422,5 @@ module.exports = {
   deleteImages,
   addReview,
   searchHalalRestaurant,
+  deleteHalalRestaurant,
 };

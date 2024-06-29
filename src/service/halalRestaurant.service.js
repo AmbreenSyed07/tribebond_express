@@ -28,7 +28,7 @@ const findAndUpdateRestaurant = async (findInfo, setInfo) => {
 
 const findRestaurantById = async (id) => {
   return asyncHandler(async () => {
-    const restaurant = await HalalRestaurant.findById({
+    const restaurant = await HalalRestaurant.findOne({
       _id: id,
       status: true,
     })

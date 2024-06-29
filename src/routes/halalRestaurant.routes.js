@@ -6,6 +6,7 @@ const {
   deleteImages,
   addReview,
   searchHalalRestaurant,
+  deleteHalalRestaurant,
 } = require("../controller/halalRestaurant.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -18,5 +19,6 @@ router.get("/display/:id", verifyToken, getRestaurantById);
 router.post("/delete-images", verifyToken, deleteImages);
 router.post("/add-review", verifyToken, addReview);
 router.post("/search", verifyToken, searchHalalRestaurant);
+router.patch("/delete/:id", verifyToken, deleteHalalRestaurant);
 
 module.exports = router;
