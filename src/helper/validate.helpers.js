@@ -73,6 +73,26 @@ const isPassword = (value) => {
   return true;
 };
 
+function isPrice(value) {
+  if (!value) {
+    return false;
+  }
+  if (value.toString().trim() === "") {
+    return false;
+  }
+  if (typeof parseFloat(value) !== "number") {
+    return false;
+  }
+  if (parseFloat(value) < 0) {
+    return false;
+  }
+  const decimalPlaces = value.toString().split(".")[1];
+  if (decimalPlaces && decimalPlaces.length > 2) {
+    return false;
+  }
+  return true;
+}
+
 module.exports = {
   isNotEmpty,
   isPassword,
@@ -80,4 +100,5 @@ module.exports = {
   isWebsite,
   isEmail,
   isID,
+  isPrice,
 };
