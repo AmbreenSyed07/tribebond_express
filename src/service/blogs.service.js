@@ -1,6 +1,8 @@
 const { asyncHandler } = require("../helper/async-error.helper");
 const Blog = require("../model/blog.model");
 const Comment = require("../model/comment.model");
+const Like = require("../model/likes.model");
+
 const BlogCommentAssociation = require("../model/blogCommentAssociation.model");
 const { base_url, sendResponse } = require("../helper/local.helpers");
 
@@ -17,6 +19,7 @@ const findBlogs = async () => {
   return asyncHandler(async () => {
     const blogs = await Blog.find({ status: true })
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     for (let blog of blogs) {
@@ -120,6 +123,7 @@ const findAssociation = async (id) => {
   return asyncHandler(async () => {
     let association = await BlogCommentAssociation.findOne({
       blogId: id,
+      status: true,
     });
     return association ? association : false;
   });
@@ -147,7 +151,7 @@ const findAssociatedComments = async (latestCommentIds) => {
 
 const findBlogById = async (id) => {
   return asyncHandler(async () => {
-    const blog = await Blog.findById(id);
+    const blog = await Blog.findOne({ _id: id, status: 1 });
     return blog ? blog : false;
   });
 };
@@ -156,6 +160,51 @@ const findCommentById = async (id) => {
   return asyncHandler(async () => {
     const comment = await Comment.findById(id);
     return comment ? comment : false;
+  });
+};
+
+const createLike = async (info) => {
+  return asyncHandler(async () => {
+    const like = new Like(info);
+
+    const savedLike = await like.save();
+    return savedLike instanceof Like ? savedLike.toJSON() : false;
+  });
+};
+
+const associateLike = async ({ blogId, userId, likeId }) => {
+  return asyncHandler(async () => {
+    let blogAssociation = await BlogCommentAssociation.findOne({
+      blogId,
+    });
+    if (!blogAssociation) {
+      blogAssociation = new BlogCommentAssociation({
+        blogId,
+        commentIds: [],
+        likeIds: [{ userId, status: true }],
+      });
+      await blogAssociation.save();
+      return "liked";
+    } else {
+      const existingLikeIndex = blogAssociation.likeIds.findIndex(
+        (like) => like.userId.toString() === userId.toString()
+      );
+
+      if (existingLikeIndex === -1) {
+        // Add a new like
+        blogAssociation.likeIds.push({ userId, status: true });
+        await blogAssociation.save();
+        // return sendResponse(res, 200, true, "Blog liked successfully.");
+      } else {
+        // Toggle like/unlike
+        blogAssociation.likeIds[existingLikeIndex].status =
+          !blogAssociation.likeIds[existingLikeIndex].status;
+        await blogAssociation.save();
+        return blogAssociation.likeIds[existingLikeIndex].status
+          ? "liked"
+          : "unliked";
+      }
+    }
   });
 };
 
@@ -171,4 +220,6 @@ module.exports = {
   findAndUpdateComment,
   findBlogById,
   findCommentById,
+  createLike,
+  associateLike,
 };

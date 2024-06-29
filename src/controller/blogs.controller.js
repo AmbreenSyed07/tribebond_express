@@ -12,6 +12,8 @@ const {
   findAndUpdateComment,
   findBlogById,
   findCommentById,
+  createLike,
+  associateLike,
 } = require("../service/blogs.service");
 const { fileUpload } = require("../helper/upload.helpers");
 const { nestComments } = require("../helper/blogs.helpers");
@@ -73,7 +75,12 @@ const addBlog = async (req, res) => {
           imgArray.push(fileName);
         } else {
           for (let img of blogImages) {
-            let fileName = await uploadAndCreateImage(img, newBlog._id, res);
+            let fileName = await uploadAndCreateImage(
+              img,
+              "blog/blog-post-image",
+              newBlog._id,
+              res
+            );
             imgArray.push(fileName);
           }
         }
@@ -146,26 +153,54 @@ const replyToComment = async (req, res) => {
 
 const displayBlogs = async (req, res) => {
   return asyncErrorHandler(async () => {
+    const { _id: userId } = req.tokenData;
     const blogs = await findBlogs();
     if (!blogs) {
       return sendResponse(res, 400, false, "No blogs have been posted yet.");
     }
 
-    const blogsWithComments = await Promise.all(
+    const blogsWithAssociations = await Promise.all(
       blogs.map(async (blog) => {
         const association = await findAssociation(blog._id);
-
+        console.log("association:", association);
         if (association) {
           // Get the latest 2 comments (first 2 in the commentIds array)
           const latestCommentIds = association?.commentIds?.slice(0, 2);
           const comments = await findAssociatedComments(latestCommentIds);
-          // what to do if comments is false????
+
+          let blogObj = { ...blog.toObject() };
           if (comments) {
             const nestedComments = await nestComments(comments);
-            return { ...blog.toObject(), comments: nestedComments };
+            blogObj = { ...blog.toObject(), comments: nestedComments };
           }
+          console.log(
+            association.likeIds.filter((like) => like.status == true),
+            association.likeIds.find(
+              (like) =>
+                like.status == true &&
+                like.userId.toString() == userId.toString()
+            ),
+            association
+          );
+          let likeCount = association.likeIds
+            ? association.likeIds.filter((like) => like.status == true)?.length
+            : 0;
+          let hasLiked = association.likeIds.find(
+            (like) =>
+              like.status == true && like.userId.toString() == userId.toString()
+          )
+            ? true
+            : false;
+          console.log(likeCount, hasLiked);
+          return { ...blogObj, likeCount, hasLiked };
         } else {
-          return { ...blog.toObject(), comments: [] };
+          console.log("else");
+          return {
+            ...blog.toObject(),
+            comments: [],
+            likeCount: 0,
+            hasLiked: false,
+          };
         }
       })
     );
@@ -175,7 +210,7 @@ const displayBlogs = async (req, res) => {
       200,
       true,
       "Successfully fetched blog posts.",
-      blogsWithComments
+      blogsWithAssociations
     );
   }, res);
 };
@@ -289,6 +324,39 @@ const deleteComment = async (req, res) => {
   }, res);
 };
 
+const likeBlog = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { _id: userId } = req.tokenData;
+    const { blog_id: blogId } = req.params;
+
+    if (!blogId) {
+      return sendResponse(res, 400, false, "Please provide a blog ID.");
+    }
+
+    const blog = await findBlogById(blogId);
+    if (!blog) {
+      return sendResponse(res, 404, false, "Blog not found.");
+    }
+
+    // const like = await createLike({ userId });
+    // if (!like) {
+    //   return sendResponse(res, 400, false, "Unable to like blog post.");
+    // }
+
+    const likeAssociation = await associateLike({
+      blogId,
+      userId,
+      // likeId: like._id,
+    });
+
+    if (likeAssociation === "liked") {
+      return sendResponse(res, 200, true, "Blog liked successfully.");
+    } else {
+      return sendResponse(res, 200, true, "Blog unliked successfully.");
+    }
+  }, res);
+};
+
 module.exports = {
   addBlog,
   addComment,
@@ -297,4 +365,5 @@ module.exports = {
   displayAllComments,
   deleteBlog,
   deleteComment,
+  likeBlog,
 };
