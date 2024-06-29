@@ -2,7 +2,12 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isWebsite,
+  isEmail,
+  isPhoneNo,
+} = require("../helper/validate.helpers");
 const {
   createHenna,
   findAndUpdateHenna,
@@ -38,11 +43,28 @@ const addHenna = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
-      return sendResponse(res, 400, false, "Please enter a contact number.");
-    } else if (!isNotEmpty(email)) {
-      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(servingCities)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter the cities that you serve in."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!henna_images || henna_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -121,7 +143,6 @@ const editHenna = async (req, res) => {
     if (!checkHenna) {
       return sendResponse(res, 404, false, "Henna not found.");
     }
-    // Check if the Henna's createdBy is equal to the user's id
     if (checkHenna.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
@@ -129,6 +150,32 @@ const editHenna = async (req, res) => {
         false,
         "You are not authorized to edit this Henna."
       );
+    }
+
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter a valid contact number."
+      );
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your valid email.");
+    } else if (!isNotEmpty(servingCities)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter the cities that you serve in."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
     }
 
     if (req.files) {
@@ -189,14 +236,14 @@ const getHennas = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
 
- const { query } = req.query;
+    const { query } = req.query;
 
- let hennas;
- if (query) {
-   hennas = await searchHennas(query);
- } else {
-   hennas = await findHennasByCity(city);
- }
+    let hennas;
+    if (query) {
+      hennas = await searchHennas(query);
+    } else {
+      hennas = await findHennasByCity(city);
+    }
 
     if (!hennas) {
       return sendResponse(res, 400, false, "No hennas found.");
@@ -221,12 +268,16 @@ const deleteHennaImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { hennaId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
+
+    if (!hennaId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const henna = await findHennaByIdHelper(hennaId);
     if (!henna) {
       return sendResponse(res, 404, false, "Henna not found");
     }
 
-    // Check if the Henna's createdBy is equal to the user's id
     if (henna.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
@@ -234,6 +285,8 @@ const deleteHennaImages = async (req, res) => {
         false,
         "You are not authorized to delete images of this Henna."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -258,6 +311,9 @@ const addHennaReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     let { hennaId, review } = req.body;
+    if (!hennaId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -289,6 +345,44 @@ const searchHenna = async (req, res) => {
   }, res);
 };
 
+const deleteHenna = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const henna = await findHennaByIdHelper(id);
+    if (!henna) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (henna.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedHenna = await findAndUpdateHenna(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedHenna) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addHenna,
   editHenna,
@@ -297,4 +391,5 @@ module.exports = {
   deleteHennaImages,
   addHennaReview,
   searchHenna,
+  deleteHenna,
 };

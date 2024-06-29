@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const Henna = require("../model/henna.model");
 
 const createHenna = async (info) => {
@@ -33,33 +33,7 @@ const findHennaById = async (id) => {
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (henna) {
-      let hennaObj = henna.toObject();
-
-      if (
-        hennaObj.createdBy &&
-        hennaObj.createdBy.profilePicture &&
-        !hennaObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        hennaObj.createdBy.profilePicture = `${base_url}public/data/profile/${hennaObj.createdBy._id}/${hennaObj.createdBy.profilePicture}`;
-      }
-      hennaObj?.reviews &&
-        hennaObj?.reviews.length > 0 &&
-        hennaObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (hennaObj.images && hennaObj.images.length > 0) {
-        hennaObj.images = hennaObj.images.map((img) => {
-          return `${base_url}public/data/henna/${hennaObj._id}/${img}`;
-        });
-      }
-      return hennaObj;
+      return modifyResponse([henna], "henna");
     } else {
       return false;
     }
@@ -75,40 +49,11 @@ const findHennasByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (hennas.length > 0) {
-      const modifiedHennas = hennas.map((henna) => {
-        let hennaObj = henna.toObject();
-
-        if (
-          hennaObj.createdBy &&
-          hennaObj.createdBy.profilePicture &&
-          !hennaObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          hennaObj.createdBy.profilePicture = `${base_url}public/data/profile/${hennaObj.createdBy._id}/${hennaObj.createdBy.profilePicture}`;
-        }
-
-        hennaObj?.reviews &&
-          hennaObj?.reviews.length > 0 &&
-          hennaObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (hennaObj.images && hennaObj.images.length > 0) {
-          hennaObj.images = hennaObj.images.map((img) => {
-            return `${base_url}public/data/henna/${hennaObj._id}/${img}`;
-          });
-        }
-        return hennaObj;
-      });
-      return modifiedHennas;
+      return modifyResponse(hennas, "henna");
     } else {
       return false;
     }
@@ -128,10 +73,13 @@ const searchHennas = async (query) => {
       $or: [
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
+        { servingCities: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return hennas.length > 0 ? modifyResponse(hennas, "henna") : false;
   });
