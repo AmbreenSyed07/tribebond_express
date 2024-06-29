@@ -375,6 +375,44 @@ const searchMosque = async (req, res) => {
   }, res);
 };
 
+const deleteMosque = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const mosque = await findMosqueRecordByIdHelper(id);
+    if (!mosque) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (mosque.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedMosque = await findAndUpdateMosqueRecord(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedMosque) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addMosqueRecord,
   editMosqueRecord,
@@ -383,4 +421,5 @@ module.exports = {
   deleteMosqueRecordImages,
   addMosqueRecordReview,
   searchMosque,
+  deleteMosque,
 };
