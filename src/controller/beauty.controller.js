@@ -2,7 +2,12 @@
 
 const { asyncErrorHandler } = require("../helper/async-error.helper");
 const { sendResponse } = require("../helper/local.helpers");
-const { isNotEmpty } = require("../helper/validate.helpers");
+const {
+  isNotEmpty,
+  isWebsite,
+  isEmail,
+  isPhoneNo,
+} = require("../helper/validate.helpers");
 const {
   createBeautyRecord,
   findAndUpdateBeautyRecord,
@@ -38,11 +43,23 @@ const addBeautyRecord = async (req, res) => {
       return sendResponse(res, 400, false, "Please enter an address.");
     } else if (!isNotEmpty(city)) {
       return sendResponse(res, 400, false, "Please enter the city.");
-    } else if (!isNotEmpty(phone)) {
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
       return sendResponse(res, 400, false, "Please enter a contact number.");
-    } else if (!isNotEmpty(email)) {
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
       return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    } else if (!beauty_images || beauty_images.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images.");
     }
+
     const info = {
       name,
       description,
@@ -131,6 +148,27 @@ const editBeautyRecord = async (req, res) => {
       );
     }
 
+    if (!isNotEmpty(name)) {
+      return sendResponse(res, 400, false, "Please enter the name.");
+    } else if (!isNotEmpty(address)) {
+      return sendResponse(res, 400, false, "Please enter an address.");
+    } else if (!isNotEmpty(city)) {
+      return sendResponse(res, 400, false, "Please enter the city.");
+    } else if (!isNotEmpty(phone) || !isPhoneNo(phone)) {
+      return sendResponse(res, 400, false, "Please enter a contact number.");
+    } else if (!isNotEmpty(email) || !isEmail(email)) {
+      return sendResponse(res, 400, false, "Please enter your email.");
+    } else if (!isNotEmpty(services)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Please enter your provided services."
+      );
+    } else if (!isWebsite(website)) {
+      return sendResponse(res, 400, false, "Please enter a valid website url.");
+    }
+
     if (req.files) {
       const { images } = req.files;
       await editImage(beautyRecordId, images, res);
@@ -207,15 +245,15 @@ const getBeautyRecords = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { city } = req.tokenData;
 
-     const { query } = req.query;
+    const { query } = req.query;
 
-     let beautyRecords;
-     if (query) {
-       beautyRecords = await searchBeautyRecords(query);
-     } else {
-       beautyRecords = await findBeautyRecordsByCity(city);
-     }
-  
+    let beautyRecords;
+    if (query) {
+      beautyRecords = await searchBeautyRecords(query);
+    } else {
+      beautyRecords = await findBeautyRecordsByCity(city);
+    }
+
     if (!beautyRecords) {
       return sendResponse(res, 400, false, "No beauty records found.");
     }
@@ -251,12 +289,16 @@ const deleteBeautyRecordImages = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { beautyRecordId, imageUrls } = req.body;
     const { _id: userId } = req.tokenData;
+
+    if (!beautyRecordId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
+
     const beautyRecord = await findBeautyRecordByIdHelper(beautyRecordId);
     if (!beautyRecord) {
       return sendResponse(res, 404, false, "Beauty record not found");
     }
 
-    // Check if the Beauty record's createdBy is equal to the user's id
     if (beautyRecord.createdBy.toString() !== userId.toString()) {
       return sendResponse(
         res,
@@ -264,6 +306,8 @@ const deleteBeautyRecordImages = async (req, res) => {
         false,
         "You are not authorized to delete images of this Beauty record."
       );
+    } else if (!imageUrls || imageUrls.length <= 0) {
+      return sendResponse(res, 400, false, "Please select images to delete.");
     }
 
     const deleteImagePromises = imageUrls.map(async (imageUrl) => {
@@ -293,6 +337,10 @@ const addBeautyRecordReview = async (req, res) => {
   return asyncErrorHandler(async () => {
     const { _id: userId } = req.tokenData;
     let { beautyRecordId, review } = req.body;
+
+    if (!beautyRecordId) {
+      return sendResponse(res, 400, false, "Please select a record id.");
+    }
     if (!isNotEmpty(review)) {
       return sendResponse(res, 400, false, "Please write a review.");
     }
@@ -330,6 +378,44 @@ const searchBeautyRecord = async (req, res) => {
   }, res);
 };
 
+const deleteBeautyRecord = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const beauty = await findBeautyRecordByIdHelper(id);
+    if (!beauty) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (beauty.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedBeauty = await findAndUpdateBeautyRecord(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedBeauty) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addBeautyRecord,
   editBeautyRecord,
@@ -338,4 +424,5 @@ module.exports = {
   deleteBeautyRecordImages,
   addBeautyRecordReview,
   searchBeautyRecord,
+  deleteBeautyRecord,
 };

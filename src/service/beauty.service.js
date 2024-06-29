@@ -38,33 +38,7 @@ const findBeautyRecordById = async (id) => {
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (beautyRecord) {
-      let beautyRecordObj = beautyRecord.toObject();
-
-      if (
-        beautyRecordObj.createdBy &&
-        beautyRecordObj.createdBy.profilePicture &&
-        !beautyRecordObj.createdBy.profilePicture.startsWith(base_url)
-      ) {
-        beautyRecordObj.createdBy.profilePicture = `${base_url}public/data/profile/${beautyRecordObj.createdBy._id}/${beautyRecordObj.createdBy.profilePicture}`;
-      }
-      beautyRecordObj?.reviews &&
-        beautyRecordObj?.reviews.length > 0 &&
-        beautyRecordObj?.reviews.forEach((review) => {
-          if (
-            review.user &&
-            review.user.profilePicture &&
-            !review.user.profilePicture.startsWith(base_url)
-          ) {
-            review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-          }
-        });
-
-      if (beautyRecordObj.images && beautyRecordObj.images.length > 0) {
-        beautyRecordObj.images = beautyRecordObj.images.map((img) => {
-          return `${base_url}public/data/beauty/${beautyRecordObj._id}/${img}`;
-        });
-      }
-      return beautyRecordObj;
+      return modifyResponse([beautyRecord], "beauty");
     } else {
       return false;
     }
@@ -80,40 +54,11 @@ const findBeautyRecordsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (beautyRecords.length > 0) {
-      const modifiedBeautyRecords = beautyRecords.map((beautyRecord) => {
-        let beautyRecordObj = beautyRecord.toObject();
-
-        if (
-          beautyRecordObj.createdBy &&
-          beautyRecordObj.createdBy.profilePicture &&
-          !beautyRecordObj.createdBy.profilePicture.startsWith(base_url)
-        ) {
-          beautyRecordObj.createdBy.profilePicture = `${base_url}public/data/profile/${beautyRecordObj.createdBy._id}/${beautyRecordObj.createdBy.profilePicture}`;
-        }
-
-        beautyRecordObj?.reviews &&
-          beautyRecordObj?.reviews.length > 0 &&
-          beautyRecordObj?.reviews.forEach((review) => {
-            if (
-              review.user &&
-              review.user.profilePicture &&
-              !review.user.profilePicture.startsWith(base_url)
-            ) {
-              review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-            }
-          });
-
-        if (beautyRecordObj.images && beautyRecordObj.images.length > 0) {
-          beautyRecordObj.images = beautyRecordObj.images.map((img) => {
-            return `${base_url}public/data/beauty/${beautyRecordObj._id}/${img}`;
-          });
-        }
-        return beautyRecordObj;
-      });
-      return modifiedBeautyRecords;
+      return modifyResponse([beautyRecords], "beauty");
     } else {
       return false;
     }
@@ -134,9 +79,11 @@ const searchBeautyRecords = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { services: { $regex: query, $options: "i" } },
       ],
+      status: true,
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (beautyRecords.length > 0) {
       return modifyResponse(beautyRecords, "beauty");
