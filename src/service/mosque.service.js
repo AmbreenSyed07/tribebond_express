@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const Mosque = require("../model/mosque.model");
 
 const createMosqueRecord = async (info) => {
@@ -30,7 +30,7 @@ const findAndUpdateMosqueRecord = async (findInfo, setInfo) => {
 
 const findMosqueRecordById = async (id) => {
   return asyncHandler(async () => {
-    const mosqueRecord = await Mosque.findById({ _id: id })
+    const mosqueRecord = await Mosque.findOne({ _id: id, status: true })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
@@ -47,6 +47,7 @@ const findMosqueRecordsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     return mosqueRecords.length > 0
@@ -57,7 +58,7 @@ const findMosqueRecordsByCity = async (city) => {
 
 const findMosqueRecordByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const mosqueRecord = await Mosque.findById(id);
+    const mosqueRecord = await Mosque.findOne({ _id: id, status: true });
     return mosqueRecord ? mosqueRecord : false;
   });
 };
@@ -69,8 +70,15 @@ const searchMosqueRecords = async (query) => {
         { name: { $regex: query, $options: "i" } },
         { city: { $regex: query, $options: "i" } },
       ],
-    });
-    return mosqueRecords.length > 0 ? mosqueRecords : false;
+      status: true,
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
+      .exec();
+    return mosqueRecords.length > 0
+      ? modifyResponse(mosqueRecords, "mosque")
+      : false;
   });
 };
 

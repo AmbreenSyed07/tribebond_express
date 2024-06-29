@@ -16,6 +16,7 @@ const getJobsByLocation = async (city) => {
   return asyncHandler(async () => {
     const jobs = await Job.find({ city, status: true })
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return jobs.length > 0 ? modifyResponse(jobs) : false;
   });
@@ -38,7 +39,9 @@ const searchJobs = async (query) => {
         { city: { $regex: query, $options: "i" } },
       ],
       status: true,
-    });
+    })
+      .sort({ createdAt: -1 })
+      .exec();
     return jobs ? modifyResponse(jobs) : false;
   });
 };

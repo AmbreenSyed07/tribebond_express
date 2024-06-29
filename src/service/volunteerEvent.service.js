@@ -80,6 +80,7 @@ const findVolunteerEventsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("createdBy", "firstName lastName profilePicture")
       .populate("reviews.user", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (volunteerEvents.length > 0) {
       const modifiedVolunteerEvents = volunteerEvents.map((volunteerEvent) => {
@@ -137,8 +138,14 @@ const searchVolunteerEvents = async (query) => {
         { city: { $regex: query, $options: "i" } },
       ],
       status: true,
-    });
-    return volunteerEvents.length > 0 ? volunteerEvents : false;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
+      .exec();
+    return volunteerEvents.length > 0
+      ? modifyResponse(volunteerEvents, "volunteer")
+      : false;
   });
 };
 

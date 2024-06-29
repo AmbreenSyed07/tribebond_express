@@ -53,6 +53,7 @@ const findSweetShopsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("createdBy", "firstName lastName profilePicture")
       .populate("reviews.user", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (sweetShops.length > 0) {
       return modifyResponse(sweetShops, "sweets");
@@ -80,6 +81,7 @@ const searchSweets = async (query) => {
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return sweets.length > 0 ? modifyResponse(sweets, "sweets") : false;
   });

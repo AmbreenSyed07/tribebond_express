@@ -54,6 +54,7 @@ const findDiningLocationsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (diningLocations.length > 0) {
       return modifyResponse(diningLocations, "food-catering");
@@ -84,6 +85,7 @@ const searchFoodCaterings = async (query) => {
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return foodCaterings.length > 0
       ? modifyResponse(foodCaterings, "food-catering")

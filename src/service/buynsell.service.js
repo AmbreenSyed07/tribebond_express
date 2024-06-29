@@ -2,7 +2,7 @@
 
 const { asyncHandler } = require("../helper/async-error.helper");
 const BuyNSell = require("../model/buynsell.model");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 
 const createBuyNSell = async (itemData) => {
   return asyncHandler(async () => {
@@ -80,6 +80,7 @@ const findBuyNSellByLocation = async (location) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (buyNSellRecords.length > 0) {
@@ -128,9 +129,15 @@ const searchBuyNSellRecords = async (query) => {
         { city: { $regex: query, $options: "i" } },
       ],
       status: true,
-    }).exec();
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
+      .exec();
 
-    return buyNSellRecords;
+    return buyNSellRecords.length > 0
+      ? modifyResponse(buyNSellRecords, "buynsell")
+      : false;
   });
 };
 

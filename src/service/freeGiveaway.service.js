@@ -77,6 +77,7 @@ const findGiveawayItemsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("createdBy", "firstName lastName profilePicture")
       .populate("reviews.user", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (giveawayItems.length > 0) {
       const modifiedGiveawayItems = giveawayItems.map((giveawayItem) => {
@@ -132,8 +133,14 @@ const searchGiveaways = async (query) => {
         { category: { $regex: query, $options: "i" } },
       ],
       status: true,
-    });
-    return giveaways.length > 0 ? giveaways : false;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
+      .exec();;
+    return giveaways.length > 0
+      ? modifyResponse(giveaways, "giveaway")
+      : false;
   });
 };
 

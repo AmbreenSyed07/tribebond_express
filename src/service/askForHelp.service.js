@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url } = require("../helper/local.helpers");
+const { base_url, modifyResponse } = require("../helper/local.helpers");
 const HelpRequest = require("../model/askForHelp.model");
 
 const createHelpRequest = async (info) => {
@@ -80,6 +80,7 @@ const findHelpRequestsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("createdBy", "firstName lastName profilePicture")
       .populate("reviews.user", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (helpRequests.length > 0) {
       const modifiedHelpRequests = helpRequests.map((helpRequest) => {
@@ -135,8 +136,14 @@ const searchHelpRequests = async (query) => {
         { category: { $regex: query, $options: "i" } },
       ],
       status: true,
-    });
-    return helpRequests.length > 0 ? helpRequests : false;
+    })
+      .populate("reviews.user", "firstName lastName profilePicture")
+      .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
+      .exec();
+    return helpRequests.length > 0
+      ? modifyResponse(helpRequests, "helpRequest")
+      : false;
   });
 };
 

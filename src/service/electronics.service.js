@@ -1,7 +1,7 @@
 /** @format */
 
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const Electronic = require("../model/electronics.model");
 
 const createElectronic = async (info) => {

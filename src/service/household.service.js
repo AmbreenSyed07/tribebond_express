@@ -54,6 +54,7 @@ const findHouseholdItemsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (householdItems.length > 0) {
       return modifyResponse(householdItems, "household");
@@ -81,6 +82,7 @@ const searchHouseholds = async (query) => {
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return households.length > 0
       ? modifyResponse(households, "household")

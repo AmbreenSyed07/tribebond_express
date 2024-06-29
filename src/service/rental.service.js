@@ -49,6 +49,7 @@ const findRentalsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (rentals.length > 0) {
@@ -77,6 +78,7 @@ const searchRentals = async (query) => {
     })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (rentals.length > 0) {
       return modifyResponse(rentals, "rental");

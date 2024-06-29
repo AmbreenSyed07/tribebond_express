@@ -1,5 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const Event = require("../model/events.model");
 
 const createEvent = async (info) => {
@@ -26,32 +26,10 @@ const findAndUpdateEvent = async (findInfo, setInfo) => {
 
 const findEventById = async (id) => {
   return asyncHandler(async () => {
-    const event = await Event.findById({ _id: id })
+    const event = await Event.findOne({ _id: id, status: 1 })
       .populate("reviews.user", "firstName lastName profilePicture")
-      .populate("createdBy", "firstName lastName profilePicture");
-    // if (event) {
-    //   let eventObj = event.toObject();
-    //   eventObj?.reviews &&
-    //     eventObj?.reviews.length > 0 &&
-    //     eventObj?.reviews.forEach((review) => {
-    //       if (
-    //         review.user &&
-    //         review.user.profilePicture &&
-    //         !review.user.profilePicture.startsWith(base_url)
-    //       ) {
-    //         review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-    //       }
-    //     });
-
-    //   if (eventObj.images && eventObj.images.length > 0) {
-    //     eventObj.images = eventObj.images.map((img) => {
-    //       return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
-    //     });
-    //   }
-    //   return eventObj;
-    // } else {
-    //   return false;
-    // }
+      .populate("createdBy", "firstName lastName profilePicture")
+      .exec();
     return event ? modifyResponse([event], "event-image") : false;
   });
 };
@@ -65,41 +43,15 @@ const findEventByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return events.length > 0 ? modifyResponse(events, "event-image") : false;
-    // if (events.length > 0) {
-    //   const modifiedEvents = events.map((event) => {
-    //     let eventObj = event.toObject();
-
-    //     eventObj?.reviews &&
-    //       eventObj?.reviews.length > 0 &&
-    //       eventObj?.reviews.forEach((review) => {
-    //         if (
-    //           review.user &&
-    //           review.user.profilePicture &&
-    //           !review.user.profilePicture.startsWith(base_url)
-    //         ) {
-    //           review.user.profilePicture = `${base_url}public/data/profile/${review.user._id}/${review.user.profilePicture}`;
-    //         }
-    //       });
-
-    //     if (eventObj.images && eventObj.images.length > 0) {
-    //       eventObj.images = eventObj.images.map((img) => {
-    //         return `${base_url}public/data/event-image/${eventObj._id}/${img}`;
-    //       });
-    //     }
-    //     return eventObj;
-    //   });
-    //   return modifiedEvents;
-    // } else {
-    //   return false;
-    // }
   });
 };
 
 const findEventByIdHelper = async (id) => {
   return asyncHandler(async () => {
-    const event = await Event.findById(id);
+    const event = await Event.findOne({ _id: id, status: 1 });
     return event ? event : false;
   });
 };

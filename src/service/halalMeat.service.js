@@ -1,5 +1,5 @@
 const { asyncHandler } = require("../helper/async-error.helper");
-const { base_url, modifyResponse } = require("../helper/local.helpers");
+const { modifyResponse } = require("../helper/local.helpers");
 const HalalMeat = require("../model/halalMeat.model");
 
 const createMeat = async (info) => {
@@ -31,7 +31,7 @@ const findMeatById = async (id) => {
       .populate("createdBy", "firstName lastName profilePicture")
       .exec();
     if (meat) {
-    return  modifyResponse([meat], "halal-meat");
+      return modifyResponse([meat], "halal-meat");
     } else {
       return false;
     }
@@ -47,6 +47,7 @@ const findMeatsByCity = async (city) => {
       .collation({ locale: "en", strength: 2 })
       .populate("reviews.user", "firstName lastName profilePicture")
       .populate("createdBy", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     if (meats.length > 0) {
       return modifyResponse(meats, "halal-meat");
@@ -74,6 +75,7 @@ const searchHalalMeats = async (query) => {
     })
       .populate("createdBy", "firstName lastName profilePicture")
       .populate("reviews.user", "firstName lastName profilePicture")
+      .sort({ createdAt: -1 })
       .exec();
     return halalMeats.length > 0
       ? modifyResponse(halalMeats, "halal-meat")
