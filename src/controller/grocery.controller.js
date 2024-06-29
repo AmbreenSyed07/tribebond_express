@@ -344,6 +344,44 @@ const searchGrocery = async (req, res) => {
   }, res);
 };
 
+const deleteGrocery = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const grocery = await findGroceryByIdHelper(id);
+    if (!grocery) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (grocery.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedGrocery = await findAndUpdateGrocery(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedGrocery) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addGrocery,
   editGrocery,
@@ -352,4 +390,5 @@ module.exports = {
   deleteImages,
   addReview,
   searchGrocery,
+  deleteGrocery,
 };
