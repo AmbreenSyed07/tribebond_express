@@ -8,6 +8,7 @@ const {
   deleteQurbaniImages,
   addQurbaniReview,
   searchQurbani,
+  deleteQurbani,
 } = require("../controller/qurbani.controller");
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -20,5 +21,6 @@ router.get("/display/:id", verifyToken, getQurbaniById);
 router.post("/delete-images", verifyToken, deleteQurbaniImages);
 router.post("/add-review", verifyToken, addQurbaniReview);
 router.post("/search", verifyToken, searchQurbani);
+router.patch("/delete/:id", verifyToken, deleteQurbani);
 
 module.exports = router;
