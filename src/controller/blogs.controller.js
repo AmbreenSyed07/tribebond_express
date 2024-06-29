@@ -162,7 +162,6 @@ const displayBlogs = async (req, res) => {
     const blogsWithAssociations = await Promise.all(
       blogs.map(async (blog) => {
         const association = await findAssociation(blog._id);
-        console.log("association:", association);
         if (association) {
           // Get the latest 2 comments (first 2 in the commentIds array)
           const latestCommentIds = association?.commentIds?.slice(0, 2);
@@ -173,15 +172,7 @@ const displayBlogs = async (req, res) => {
             const nestedComments = await nestComments(comments);
             blogObj = { ...blog.toObject(), comments: nestedComments };
           }
-          console.log(
-            association.likeIds.filter((like) => like.status == true),
-            association.likeIds.find(
-              (like) =>
-                like.status == true &&
-                like.userId.toString() == userId.toString()
-            ),
-            association
-          );
+
           let likeCount = association.likeIds
             ? association.likeIds.filter((like) => like.status == true)?.length
             : 0;
@@ -191,10 +182,8 @@ const displayBlogs = async (req, res) => {
           )
             ? true
             : false;
-          console.log(likeCount, hasLiked);
           return { ...blogObj, likeCount, hasLiked };
         } else {
-          console.log("else");
           return {
             ...blog.toObject(),
             comments: [],
