@@ -329,6 +329,44 @@ const searchHalalMeat = async (req, res) => {
   }, res);
 };
 
+const deleteHalalMeat = async (req, res) => {
+  return asyncErrorHandler(async () => {
+    const { id } = req.params;
+    const { _id: userId } = req.tokenData;
+
+    const meat = await findMeatByIdHelper(id);
+    if (!meat) {
+      return sendResponse(res, 404, false, "Record not found");
+    }
+    if (meat.createdBy.toString() !== userId.toString()) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "You are not authorized to delete this record."
+      );
+    }
+
+    const deletedMeat = await findAndUpdateMeat(
+      { _id: id },
+      {
+        status: false,
+        updatedBy: userId,
+      }
+    );
+    if (!deletedMeat) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Some error occurred, please try again later."
+      );
+    }
+
+    return sendResponse(res, 200, true, "Successfully deleted record.");
+  }, res);
+};
+
 module.exports = {
   addMeat,
   editMeat,
@@ -337,4 +375,5 @@ module.exports = {
   deleteImages,
   addReview,
   searchHalalMeat,
+  deleteHalalMeat,
 };
