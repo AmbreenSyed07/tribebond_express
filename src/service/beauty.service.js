@@ -58,7 +58,7 @@ const findBeautyRecordsByCity = async (city) => {
       .exec();
 
     if (beautyRecords.length > 0) {
-      return modifyResponse([beautyRecords], "beauty");
+      return modifyResponse(beautyRecords, "beauty");
     } else {
       return false;
     }
