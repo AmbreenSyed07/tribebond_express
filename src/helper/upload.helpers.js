@@ -222,6 +222,26 @@ const deleteImageFromStorage = async (imagePath, id, folder, res) => {
   });
 };
 
+async function fileExists(imagePath, id, folder) {
+  try {
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "public",
+      "data",
+      `${folder}`,
+      `${id}`,
+      `${imagePath}`
+    );
+    await fs.promises.access(filePath);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return false;
+    }
+  }
+}
+
 /*****************************END*****************************/
 module.exports = {
   fileUpload,
@@ -229,4 +249,5 @@ module.exports = {
   getRandomFileName,
   extractImageIdentifier,
   deleteImageFromStorage,
+  fileExists,
 };

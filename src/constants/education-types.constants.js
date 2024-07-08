@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const educationTypes = [
   {
     _id: "6646a4040c7304a8ac5263da",
